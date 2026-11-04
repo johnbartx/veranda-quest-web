@@ -8,14 +8,14 @@
   "taille": 64918892
  },
  "peggy": {
-  "version": "818bd356ff",
+  "version": "ec205ec913",
   "morceaux": [
-   "peggy-818bd356ff.part00",
-   "peggy-818bd356ff.part01",
-   "peggy-818bd356ff.part02",
-   "peggy-818bd356ff.part03"
+   "peggy-ec205ec913.part00",
+   "peggy-ec205ec913.part01",
+   "peggy-ec205ec913.part02",
+   "peggy-ec205ec913.part03"
   ],
-  "taille": 167396444
+  "taille": 167396508
  },
  "rallye": {
   "version": "80426b4759",
