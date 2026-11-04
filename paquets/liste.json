@@ -1,0 +1,48 @@
+{
+ "mairie": {
+  "version": "308dae7bf0",
+  "morceaux": [
+   "mairie-308dae7bf0.part00",
+   "mairie-308dae7bf0.part01"
+  ],
+  "taille": 67162836
+ },
+ "peggy": {
+  "version": "cbdfe30a5a",
+  "morceaux": [
+   "peggy-cbdfe30a5a.part00",
+   "peggy-cbdfe30a5a.part01",
+   "peggy-cbdfe30a5a.part02"
+  ],
+  "taille": 115642292
+ },
+ "rallye": {
+  "version": "6bf1671181",
+  "morceaux": [
+   "rallye-6bf1671181.part00",
+   "rallye-6bf1671181.part01",
+   "rallye-6bf1671181.part02",
+   "rallye-6bf1671181.part03",
+   "rallye-6bf1671181.part04",
+   "rallye-6bf1671181.part05"
+  ],
+  "taille": 250145220
+ },
+ "resto": {
+  "version": "11620bd2cf",
+  "morceaux": [
+   "resto-11620bd2cf.part00",
+   "resto-11620bd2cf.part01"
+  ],
+  "taille": 66061784
+ },
+ "taupes": {
+  "version": "a44e913406",
+  "morceaux": [
+   "taupes-a44e913406.part00",
+   "taupes-a44e913406.part01",
+   "taupes-a44e913406.part02"
+  ],
+  "taille": 113213916
+ }
+}
