@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1793809447';
+const CACHE_VERSION = '1793809447-reseau';
 /** @type {string} */
 const CACHE_PREFIX = 'Veranda Quest-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
@@ -22,6 +22,7 @@ const FULL_CACHE = CACHED_FILES.concat(CACHEABLE_FILES);
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_FILES)));
+	self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -32,6 +33,8 @@ self.addEventListener('activate', (event) => {
 		}
 	).then(function () {
 		// Enable navigation preload if available.
+		return self.clients.claim();
+	}).then(function () {
 		return ('navigationPreload' in self.registration) ? self.registration.navigationPreload.enable() : Promise.resolve();
 	}));
 });
@@ -105,6 +108,14 @@ self.addEventListener(
 				// Try to use cache first
 				const cache = await caches.open(CACHE_NAME);
 				if (isNavigate) {
+					// VQ-RESEAU-DABORD : toujours la dernière version de la page quand on a du réseau.
+					try {
+						let rep = await fetch(event.request, { cache: 'no-cache' });
+						if (rep.ok) {
+							cache.put('index.html', rep.clone());
+							return ENSURE_CROSSORIGIN_ISOLATION_HEADERS ? ensureCrossOriginIsolationHeaders(rep) : rep;
+						}
+					} catch (e) {}
 					// Check if we have full cache during HTML page request.
 					/** @type {Response[]} */
 					const fullCache = await Promise.all(FULL_CACHE.map((name) => cache.match(name)));

@@ -121,7 +121,7 @@ body {
   var bufs=[];
   for(var i=0;i<PARTS.length;i++){
    var p=PARTS[i], r=c?await c.match(p):null;
-   if(!r){ r=await orig(p,{cache:'no-cache'}); if(!r.ok) throw new Error('Morceau manquant '+p); if(c){ try{ await c.put(p,r.clone()); }catch(err){} } }
+   if(!r){ r=await orig(p,{cache:'no-cache'}); if(!r.ok){ try{ if(!sessionStorage.getItem('vq-repare')){ sessionStorage.setItem('vq-repare','1'); var regs=await navigator.serviceWorker.getRegistrations(); for(var j=0;j<regs.length;j++) await regs[j].unregister(); var ks=await caches.keys(); for(var j=0;j<ks.length;j++) await caches.delete(ks[j]); location.reload(); await new Promise(function(){}); } }catch(err){} throw new Error('Morceau manquant '+p); } if(c){ try{ await c.put(p,r.clone()); }catch(err){} } }
    bufs.push(await r.arrayBuffer());
   }
   return new Response(new Blob(bufs),{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(TAILLE)}});
