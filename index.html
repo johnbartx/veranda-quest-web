@@ -234,6 +234,13 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 }());
 		</script>
-	</body>
+	<style>
+#tourne{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1a33;color:#fff;font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:16px}
+#tourne p{font-size:1.6rem;font-weight:800;margin:0}
+#tourne span{opacity:.8}
+@media (orientation: portrait) and (pointer: coarse){#tourne{display:flex}}
+</style>
+<div id="tourne"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 3a9 9 0 0 1 10 0"/><path d="M15 2l2 1-1 2"/></svg><p>Tourne ton téléphone</p><span>Le jeu se joue à l'horizontale.</span></div>
+</body>
 </html>
 
