@@ -93,6 +93,10 @@ body {
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 <link rel="manifest" href="index.manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Veranda Quest">
 
 	</head>
 	<body>
@@ -110,67 +114,9 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
-		<script>(function () {
-  // Son sur téléphone : réveil au premier geste, et coupure quand on quitte le jeu
-  // (autre appli, onglet fermé, écran verrouillé), sinon l'iPhone garde le son en arrière-plan.
-  if (window.__vqSon) return; window.__vqSon = true;
-  const contextes = [];
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (AC) {
-    const Suivi = function (...a) { const c = new AC(...a); contextes.push(c); return c; };
-    Suivi.prototype = AC.prototype;
-    window.AudioContext = Suivi;
-    if (window.webkitAudioContext) window.webkitAudioContext = Suivi;
-  }
-  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-  const muet = new Audio('data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==');
-  muet.setAttribute('playsinline', '');
-  let muetJoue = false;
-  function reveiller() {
-    if (!muetJoue) { muetJoue = true; muet.play().catch(function () { muetJoue = false; }); }
-    for (const c of contextes) {
-      if (c.state !== 'running') c.resume().catch(function () {});
-      try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0); } catch (e) {}
-    }
-  }
-  for (const t of ['touchstart', 'touchend', 'pointerdown', 'click', 'keydown']) {
-    window.addEventListener(t, reveiller, { capture: true, passive: true });
-  }
-  function couper() {
-    muet.pause();
-    try { if (navigator.audioSession) navigator.audioSession.type = 'auto'; } catch (e) {}
-    for (const c of contextes) { if (c.state === 'running') c.suspend().catch(function () {}); }
-  }
-  function reprendre() {
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-    for (const c of contextes) { if (c.state !== 'running') c.resume().catch(function () {}); }
-  }
-  document.addEventListener('visibilitychange', function () { if (document.hidden) couper(); else reprendre(); });
-  window.addEventListener('pagehide', couper);
-  window.addEventListener('pageshow', function () { if (!document.hidden) reprendre(); });
-  window.addEventListener('blur', function () { if (document.hidden) couper(); });
-})();</script>
-<script>(function(){
- var PARTS=["index-a25bfddd22.part00", "index-a25bfddd22.part01", "index-a25bfddd22.part02", "index-a25bfddd22.part03", "index-a25bfddd22.part04"], VERSION='a25bfddd22', TAILLE=182395304;
- var orig=window.fetch.bind(window);
- window.fetch=async function(e,o){
-  var u=(typeof e==='string')?e:(e&&e.url)||'';
-  if(!/index\.pck(\?|$)/.test(u)) return orig(e,o);
-  var nomCache='vq-pck-'+VERSION, c=null;
-  try{ c=await caches.open(nomCache); (await caches.keys()).forEach(function(k){ if(k.indexOf('vq-pck-')===0&&k!==nomCache) caches.delete(k); }); }catch(err){ c=null; }
-  var bufs=[];
-  for(var i=0;i<PARTS.length;i++){
-   var p=PARTS[i], r=c?await c.match(p):null;
-   if(!r){ r=await orig(p,{cache:'no-cache'}); if(!r.ok){ try{ if(!sessionStorage.getItem('vq-repare')){ sessionStorage.setItem('vq-repare','1'); var regs=await navigator.serviceWorker.getRegistrations(); for(var j=0;j<regs.length;j++) await regs[j].unregister(); var ks=await caches.keys(); for(var j=0;j<ks.length;j++) await caches.delete(ks[j]); location.reload(); await new Promise(function(){}); } }catch(err){} throw new Error('Morceau manquant '+p); } if(c){ try{ await c.put(p,r.clone()); }catch(err){} } }
-   bufs.push(await r.arrayBuffer());
-  }
-  return new Response(new Blob(bufs),{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(TAILLE)}});
- };
-})();
-</script>
-<script src="index.js"></script>
+		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":182395304,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":56490272,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -274,13 +220,6 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 }());
 		</script>
-	<style>
-#tourne{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1a33;color:#fff;font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:16px}
-#tourne p{font-size:1.6rem;font-weight:800;margin:0}
-#tourne span{opacity:.8}
-@media (orientation: portrait) and (pointer: coarse){#tourne{display:flex}}
-</style>
-<div id="tourne"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 3a9 9 0 0 1 10 0"/><path d="M15 2l2 1-1 2"/></svg><p>Tourne ton téléphone</p><span>Le jeu se joue à l'horizontale.</span></div>
-</body>
+	</body>
 </html>
 
