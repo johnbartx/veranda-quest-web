@@ -1,50 +1,51 @@
 {
  "mairie": {
-  "version": "b33389126b",
+  "version": "6a4ed8c2b2",
   "morceaux": [
-   "mairie-b33389126b.part00",
-   "mairie-b33389126b.part01"
+   "mairie-6a4ed8c2b2.part00",
+   "mairie-6a4ed8c2b2.part01"
   ],
-  "taille": 64918892
+  "taille": 65343240
  },
  "peggy": {
-  "version": "ec205ec913",
+  "version": "f53275475c",
   "morceaux": [
-   "peggy-ec205ec913.part00",
-   "peggy-ec205ec913.part01",
-   "peggy-ec205ec913.part02",
-   "peggy-ec205ec913.part03"
+   "peggy-f53275475c.part00",
+   "peggy-f53275475c.part01",
+   "peggy-f53275475c.part02",
+   "peggy-f53275475c.part03"
   ],
-  "taille": 167396508
+  "taille": 167819992
  },
  "rallye": {
-  "version": "80426b4759",
+  "version": "08a9d2acfb",
   "morceaux": [
-   "rallye-80426b4759.part00",
-   "rallye-80426b4759.part01",
-   "rallye-80426b4759.part02",
-   "rallye-80426b4759.part03",
-   "rallye-80426b4759.part04"
+   "rallye-08a9d2acfb.part00",
+   "rallye-08a9d2acfb.part01",
+   "rallye-08a9d2acfb.part02",
+   "rallye-08a9d2acfb.part03",
+   "rallye-08a9d2acfb.part04",
+   "rallye-08a9d2acfb.part05"
   ],
-  "taille": 208479416
+  "taille": 240042220
  },
  "resto": {
-  "version": "2016ac7ac3",
+  "version": "e2c8453d5b",
   "morceaux": [
-   "resto-2016ac7ac3.part00",
-   "resto-2016ac7ac3.part01"
+   "resto-e2c8453d5b.part00",
+   "resto-e2c8453d5b.part01"
   ],
-  "taille": 66204056
+  "taille": 66628404
  },
  "taupes": {
-  "version": "7515e4ec3b",
+  "version": "4b239fc963",
   "morceaux": [
-   "taupes-7515e4ec3b.part00",
-   "taupes-7515e4ec3b.part01",
-   "taupes-7515e4ec3b.part02",
-   "taupes-7515e4ec3b.part03",
-   "taupes-7515e4ec3b.part04"
+   "taupes-4b239fc963.part00",
+   "taupes-4b239fc963.part01",
+   "taupes-4b239fc963.part02",
+   "taupes-4b239fc963.part03",
+   "taupes-4b239fc963.part04"
   ],
-  "taille": 210138096
+  "taille": 210562428
  }
 }
