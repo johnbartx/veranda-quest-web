@@ -116,13 +116,13 @@ body {
 
 		<script>
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
-  const MORCEAUX_PCK = ["index.pck.part0","index.pck.part1","index.pck.part2","index.pck.part3"];
+  const MORCEAUX_PCK = ["index.pck.b50987159.part0","index.pck.b50987159.part1","index.pck.b50987159.part2","index.pck.b50987159.part3"];
   const fetchOrigine = window.fetch.bind(window);
   window.fetch = async function (entree, options) {
     const url = typeof entree === 'string' ? entree : (entree && entree.url) || '';
     if (url.split('/').pop().split('?')[0] !== 'index.pck') return fetchOrigine(entree, options);
     const blobs = [];
-    for (const p of MORCEAUX_PCK) { const r = await fetchOrigine(p); if (!r.ok) throw new Error('morceau ' + p); blobs.push(await r.blob()); }
+    for (const p of MORCEAUX_PCK) { const r = await fetchOrigine(p, { cache: "no-cache" }); if (!r.ok) throw new Error('morceau ' + p); blobs.push(await r.blob()); }
     return new Response(new Blob(blobs).stream(), { status: 200, headers: { 'Content-Type': 'application/octet-stream' } });
   };
 </script>
