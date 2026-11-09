@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Veranda Quest – Mes potes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Planches de bois peint sur fond noir, comme l'interface des jeux V2 */
+:root{
+  --nuit:#0d0a08; --bois:#7a4a26; --bois-clair:#a0662f; --bois-sombre:#4a2a14;
+  --parchemin:#f1e2bf; --encre:#2b1a0e; --rouge:#b8322a; --or:#e9b23a;
+  --titre:"Lilita One","Arial Black",system-ui,sans-serif;
+  --texte:"Nunito",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--nuit);color:var(--parchemin);font-family:var(--texte);
+  padding-block:max(16px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;align-items:center;gap:18px}
+.langues{align-self:flex-end;display:flex;gap:6px}
+.langues button{font:800 13px var(--texte);background:var(--bois-sombre);color:var(--parchemin);border:2px solid var(--bois);border-radius:6px;padding:4px 8px}
+.langues button[aria-pressed="true"]{background:var(--or);color:var(--encre);border-color:var(--or)}
+.planche{width:100%;max-width:440px;border-radius:10px;padding:18px;position:relative;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.0) 0 22px,rgba(0,0,0,.18) 22px 24px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 3px,rgba(0,0,0,.05) 3px 7px),
+    linear-gradient(var(--bois-clair),var(--bois));
+  border:4px solid var(--bois-sombre);box-shadow:0 6px 0 var(--bois-sombre),inset 0 0 0 2px rgba(255,255,255,.08)}
+.planche::before,.planche::after{content:"";position:absolute;top:8px;width:9px;height:9px;border-radius:50%;background:#3a2a1a;box-shadow:inset 1px 1px 0 rgba(255,255,255,.3)}
+.planche::before{left:8px}.planche::after{right:8px}
+h1,h2{font-family:var(--titre);font-weight:400;margin:0;text-align:center;letter-spacing:.02em;text-shadow:0 3px 0 var(--bois-sombre);text-wrap:balance}
+h1{font-size:30px;color:var(--or)}
+h2{font-size:22px;margin-bottom:12px}
+.carte{background:var(--parchemin);color:var(--encre);border-radius:6px;padding:18px 16px;position:relative;box-shadow:inset 0 0 30px rgba(120,80,30,.35);overflow:hidden}
+.carte .entete{font-family:var(--titre);font-size:15px;letter-spacing:.12em;text-align:center;color:var(--bois)}
+.carte p{margin:8px 0;text-align:center}
+label{display:block;font-weight:800;margin-top:10px}
+input{width:100%;font:800 20px var(--texte);padding:10px 12px;border:3px solid var(--bois);border-radius:8px;background:#fffaf0;color:var(--encre);text-transform:none}
+input:focus-visible,button:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.btn{display:block;width:100%;margin-top:12px;font:400 22px var(--titre);letter-spacing:.04em;color:var(--parchemin);background:var(--rouge);border:3px solid #6e1a14;border-radius:10px;padding:10px;box-shadow:0 4px 0 #6e1a14;cursor:pointer}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6e1a14}
+.btn.second{background:var(--bois-sombre);border-color:#2a170a;box-shadow:0 4px 0 #2a170a;font-size:18px}
+.btn:disabled{opacity:.5}
+.tampon{position:absolute;right:10px;top:40%;font:400 34px var(--titre);color:var(--rouge);border:4px solid var(--rouge);border-radius:8px;padding:2px 10px;transform:rotate(-14deg) scale(1);opacity:.85;pointer-events:none}
+.tampon.anime{animation:tamp .45s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes tamp{from{transform:rotate(-14deg) scale(2.6);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.85}}
+@media (prefers-reduced-motion:reduce){.tampon.anime{animation:none}}
+.code{font:400 32px var(--titre);letter-spacing:.06em;color:var(--rouge);text-align:center;margin:4px 0;user-select:all}
+.classement{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.classement li{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;background:var(--parchemin);color:var(--encre);border-radius:6px;padding:8px 10px;font-weight:800}
+.classement li.moi{outline:3px solid var(--or)}
+.classement .rang{font:400 20px var(--titre);color:var(--bois);text-align:center}
+.classement .nom{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.classement .pts{font-variant-numeric:tabular-nums}
+.message{min-height:1.4em;text-align:center;font-weight:800;margin:8px 0 0;color:var(--or)}
+.petit{font-size:13px;opacity:.85;text-align:center;margin:10px 0 0}
+.ligne{display:flex;gap:8px}.ligne input{flex:1;min-width:0;text-transform:uppercase}.ligne .btn{width:auto;margin-top:0;padding:8px 14px}
+</style>
+</head>
+<body>
+<div class="langues" role="group" aria-label="Langue">
+  <button id="l-fr" data-l="fr">FR</button><button id="l-en" data-l="en">EN</button><button id="l-es" data-l="es">ES</button>
+</div>
+<h1>VERANDA QUEST</h1>
+
+<!-- 1. Carte de visite : choix du nom -->
+<section class="planche" id="ecran-nom" hidden>
+  <div class="carte">
+    <div class="entete" data-t="VERANDA QUEST · CARTE DE VISITE">VERANDA QUEST · CARTE DE VISITE</div>
+    <p data-t="Bienvenue dans l'équipe !">Bienvenue dans l'équipe !</p>
+    <label for="nom" data-t="Ton nom :">Ton nom :</label>
+    <input id="nom" maxlength="16" autocomplete="nickname" placeholder="John">
+    <div class="tampon" id="tampon" hidden data-t="EMBAUCHÉ">EMBAUCHÉ</div>
+  </div>
+  <button class="btn" id="signer" data-t="SIGNER">SIGNER</button>
+  <p class="message" id="msg-nom" role="status"></p>
+</section>
+
+<!-- 2. Mon code + mes potes -->
+<section class="planche" id="ecran-potes" hidden>
+  <h2 data-t="MES POTES">MES POTES</h2>
+  <div class="carte">
+    <p><span data-t="Ton code ami">Ton code ami</span> :</p>
+    <div class="code" id="mon-code">…</div>
+    <p data-t="Donne-le à tes potes pour qu'ils t'ajoutent.">Donne-le à tes potes pour qu'ils t'ajoutent.</p>
+  </div>
+  <button class="btn second" id="copier" data-t="Copier mon code">Copier mon code</button>
+
+  <label for="code-ami" data-t="Ajouter un pote (son code) :">Ajouter un pote (son code) :</label>
+  <div class="ligne">
+    <input id="code-ami" placeholder="LUCIE-1234" maxlength="13" autocapitalize="characters">
+    <button class="btn" id="ajouter" data-t="AJOUTER">AJOUTER</button>
+  </div>
+  <p class="message" id="msg-potes" role="status"></p>
+
+  <h2 style="margin-top:14px" data-t="CLASSEMENT">CLASSEMENT</h2>
+  <ol class="classement" id="classement"></ol>
+  <button class="btn second" id="rafraichir" data-t="Actualiser">Actualiser</button>
+
+  <button class="btn" id="victoire" data-t="ESSAI : GAGNER 1 000 POINTS">ESSAI : GAGNER 1 000 POINTS</button>
+  <p class="petit" data-t="Page d'essai : dans le jeu, les points arrivent tout seuls après chaque victoire.">Page d'essai : dans le jeu, les points arrivent tout seuls après chaque victoire.</p>
+</section>
+
+<script>
+// ---- Réglages Supabase (clé PUBLIQUE uniquement) ----
+const URL_SB = "https://vojtjjvbsjwmxyjzgbez.supabase.co";
+const CLE = "sb_publishable_M2OW2WqU4xsNNEw3OXxIow_h8atubgJ";
+
+// ---- Langues ----
+const TXT = {
+  "VERANDA QUEST · CARTE DE VISITE":{en:"VERANDA QUEST · BUSINESS CARD",es:"VERANDA QUEST · TARJETA DE VISITA"},
+  "Bienvenue dans l'équipe !":{en:"Welcome to the team!",es:"¡Bienvenido al equipo!"},
+  "Ton nom :":{en:"Your name:",es:"Tu nombre:"},
+  "EMBAUCHÉ":{en:"HIRED",es:"CONTRATADO"},
+  "SIGNER":{en:"SIGN",es:"FIRMAR"},
+  "MES POTES":{en:"MY BUDDIES",es:"MIS COLEGAS"},
+  "Ton code ami":{en:"Your friend code",es:"Tu código de amigo"},
+  "Donne-le à tes potes pour qu'ils t'ajoutent.":{en:"Give it to your buddies so they can add you.",es:"Dáselo a tus colegas para que te añadan."},
+  "Copier mon code":{en:"Copy my code",es:"Copiar mi código"},
+  "Ajouter un pote (son code) :":{en:"Add a buddy (their code):",es:"Añadir un colega (su código):"},
+  "AJOUTER":{en:"ADD",es:"AÑADIR"},
+  "CLASSEMENT":{en:"RANKING",es:"CLASIFICACIÓN"},
+  "Actualiser":{en:"Refresh",es:"Actualizar"},
+  "ESSAI : GAGNER 1 000 POINTS":{en:"TEST: WIN 1,000 POINTS",es:"PRUEBA: GANAR 1.000 PUNTOS"},
+  "Page d'essai : dans le jeu, les points arrivent tout seuls après chaque victoire.":{en:"Test page: in the game, points are sent automatically after each win.",es:"Página de prueba: en el juego, los puntos se envían solos tras cada victoria."},
+  "Écris ton nom.":{en:"Write your name.",es:"Escribe tu nombre."},
+  "Connexion…":{en:"Connecting…",es:"Conectando…"},
+  "Pas de connexion. Réessaie.":{en:"No connection. Try again.",es:"Sin conexión. Inténtalo otra vez."},
+  "Code copié !":{en:"Code copied!",es:"¡Código copiado!"},
+  "Pote ajouté !":{en:"Buddy added!",es:"¡Colega añadido!"},
+  "Ce code n'existe pas.":{en:"This code doesn't exist.",es:"Este código no existe."},
+  "C'est ton propre code !":{en:"That's your own code!",es:"¡Es tu propio código!"},
+  "Score envoyé : %s":{en:"Score sent: %s",es:"Puntuación enviada: %s"},
+  "(toi)":{en:"(you)",es:"(tú)"},
+  "Ajoute un pote avec son code pour voir son score ici.":{en:"Add a buddy with their code to see their score here.",es:"Añade a un colega con su código para ver su puntuación aquí."}
+};
+let langue = "fr";
+const lire = k => { try { return localStorage.getItem(k) } catch(e) { return null } };
+const ecrire = (k,v) => { try { v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v) } catch(e) {} };
+function tr(fr){ return langue==="fr" ? fr : (TXT[fr]?.[langue] || fr) }
+function appliquerLangue(){
+  document.documentElement.lang = langue;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = tr(el.dataset.t));
+  document.querySelectorAll(".langues button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l===langue));
+  if (dernierClassement) afficherClassement(dernierClassement);
+}
+document.querySelectorAll(".langues button").forEach(b => b.onclick = () => { langue=b.dataset.l; ecrire("vq_langue",langue); appliquerLangue() });
+langue = lire("vq_langue") || ((navigator.language||"fr").slice(0,2).match(/en|es/)||["fr"])[0];
+
+// ---- Supabase en REST simple (même méthode que dans Godot) ----
+let session = null;
+try { session = JSON.parse(lire("vq_session")||"null") } catch(e) {}
+function garderSession(s){ session = s; ecrire("vq_session", JSON.stringify(s)) }
+
+async function auth(chemin, corps){
+  const r = await fetch(URL_SB+"/auth/v1/"+chemin, {method:"POST",headers:{apikey:CLE,"Content-Type":"application/json"},body:JSON.stringify(corps)});
+  if (!r.ok) throw new Error("auth "+r.status+" "+await r.text());
+  const j = await r.json();
+  garderSession({access_token:j.access_token, refresh_token:j.refresh_token, expires_at:Date.now()/1000 + j.expires_in, uid:j.user.id});
+}
+async function connecte(){
+  if (!session) return auth("signup", {});                       // connexion anonyme
+  if (session.expires_at - 60 < Date.now()/1000)
+    try { await auth("token?grant_type=refresh_token", {refresh_token:session.refresh_token}) }
+    catch(e) { garderSession(null); ecrire("vq_moi",null); throw e }
+}
+async function api(methode, chemin, corps){
+  await connecte();
+  const r = await fetch(URL_SB+"/rest/v1/"+chemin, {method:methode,
+    headers:{apikey:CLE,Authorization:"Bearer "+session.access_token,"Content-Type":"application/json",Prefer:"return=representation"},
+    body: corps===undefined ? undefined : JSON.stringify(corps)});
+  const t = await r.text();
+  if (!r.ok) throw new Error(methode+" "+chemin+" "+r.status+" "+t);
+  return t ? JSON.parse(t) : null;
+}
+
+// ---- Écrans ----
+const $ = id => document.getElementById(id);
+let moi = null; try { moi = JSON.parse(lire("vq_moi")||"null") } catch(e) {}
+let dernierClassement = null;
+const fmt = n => n.toLocaleString(langue==="en"?"en-US":langue==="es"?"es-ES":"fr-FR");
+
+function montrer(){
+  $("ecran-nom").hidden = !!moi;
+  $("ecran-potes").hidden = !moi;
+  if (moi) { $("mon-code").textContent = moi.code; charger() }
+}
+
+$("signer").onclick = async () => {
+  const nom = $("nom").value.trim().slice(0,16);
+  if (!nom) { $("msg-nom").textContent = tr("Écris ton nom."); return }
+  $("signer").disabled = true; $("msg-nom").textContent = tr("Connexion…");
+  try {
+    let lignes = await api("GET","joueurs?select=nom,code,total&id=eq."+((await connecte(), session.uid)));
+    if (!lignes.length) lignes = await api("POST","joueurs",{nom});
+    moi = lignes[0]; ecrire("vq_moi", JSON.stringify(moi));
+    $("msg-nom").textContent = "";
+    const t = $("tampon"); t.hidden = false; t.classList.add("anime");
+    setTimeout(montrer, 1100);
+  } catch(e) { console.error(e); $("msg-nom").textContent = tr("Pas de connexion. Réessaie.") }
+  $("signer").disabled = false;
+};
+
+$("copier").onclick = async () => {
+  try { await navigator.clipboard.writeText(moi.code); $("msg-potes").textContent = tr("Code copié !") }
+  catch(e) { const s=getSelection(), r=document.createRange(); r.selectNodeContents($("mon-code")); s.removeAllRanges(); s.addRange(r) }
+};
+
+$("ajouter").onclick = async () => {
+  const code = $("code-ami").value.trim().toUpperCase();
+  if (!code) return;
+  $("ajouter").disabled = true;
+  try {
+    const rep = await api("POST","rpc/ajouter_ami",{code_ami:code});
+    $("msg-potes").textContent = rep==="ok" ? tr("Pote ajouté !") : rep==="moi" ? tr("C'est ton propre code !") : tr("Ce code n'existe pas.");
+    if (rep==="ok") { $("code-ami").value=""; charger() }
+  } catch(e) { console.error(e); $("msg-potes").textContent = tr("Pas de connexion. Réessaie.") }
+  $("ajouter").disabled = false;
+};
+
+$("victoire").onclick = async () => {
+  try {
+    const l = await api("PATCH","joueurs?id=eq."+session.uid,{total:(moi.total||0)+1000});
+    moi = l[0]; ecrire("vq_moi", JSON.stringify(moi));
+    $("msg-potes").textContent = tr("Score envoyé : %s").replace("%s", fmt(moi.total));
+    charger();
+  } catch(e) { console.error(e); $("msg-potes").textContent = tr("Pas de connexion. Réessaie.") }
+};
+$("rafraichir").onclick = () => charger();
+
+async function charger(){
+  try { afficherClassement(await api("GET","joueurs?select=id,nom,code,total&order=total.desc,maj.asc&limit=100")) }
+  catch(e) { console.error(e); $("msg-potes").textContent = tr("Pas de connexion. Réessaie.") }
+}
+function afficherClassement(liste){
+  dernierClassement = liste;
+  const ol = $("classement"); ol.textContent = "";
+  liste.forEach((j,i) => {
+    const li = document.createElement("li"); if (j.id===session?.uid) li.className="moi";
+    const r = document.createElement("span"); r.className="rang"; r.textContent = i+1;
+    const n = document.createElement("span"); n.className="nom"; n.textContent = j.nom + (j.id===session?.uid ? " "+tr("(toi)") : "");
+    const p = document.createElement("span"); p.className="pts"; p.textContent = fmt(j.total);
+    li.append(r,n,p); ol.append(li);
+  });
+  if (liste.length < 2) { const li=document.createElement("li"); li.style.gridTemplateColumns="1fr"; li.style.fontWeight="600"; li.textContent=tr("Ajoute un pote avec son code pour voir son score ici."); ol.append(li) }
+}
+
+appliquerLangue();
+montrer();
+</script>
+</body>
+</html>
