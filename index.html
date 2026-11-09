@@ -133,7 +133,7 @@ body {
     window.addEventListener('unhandledrejection', (e) => noter('PROMESSE ' + (e.reason && (e.reason.message || e.reason))));
     let mem = '';
     try { if (navigator.deviceMemory) mem = ' mem ' + navigator.deviceMemory + ' Go'; } catch (e) {}
-    setTimeout(() => noter('page v09-11-0835' + mem), 50);
+    setTimeout(() => noter('page v09-11-0840 flux' + mem), 50);
   })();
   // Plus de service worker (il gardait d'anciennes versions sur l'iPhone) : on retire ceux qui restent.
   if ('serviceWorker' in navigator) {
@@ -157,18 +157,34 @@ body {
     const url = typeof entree === 'string' ? entree : (entree && entree.url) || '';
     if (url.split('/').pop().split('?')[0] !== 'index.pck') return fetchOrigine(entree, options);
     const barre = document.getElementById('status-progress');
-    const blobs = [];
-    try {
-      for (let n = 0; n < MORCEAUX_PCK.length; n++) {
-        const r = await fetchOrigine(MORCEAUX_PCK[n]);
-        if (!r.ok) throw new Error('morceau ' + MORCEAUX_PCK[n]);
-        // r.blob() : l'iPhone garde les gros morceaux sur le disque, pas dans la mémoire du jeu
-        blobs.push(await r.blob());
-        if (barre) { barre.max = 1; barre.value = 0.22 + 0.78 * (n + 1) / MORCEAUX_PCK.length; }
+    // Les morceaux sont passés au jeu au fil de l'eau (un flux), sans être recollés en un gros fichier :
+    // l'iPhone n'arrive pas à relire un fichier recollé de 138 Mo (« The I/O read operation failed »).
+    let n = 0, lecteur = null, recu = 0;
+    const flux = new ReadableStream({
+      async pull(ctrl) {
+        try {
+          for (;;) {
+            if (!lecteur) {
+              if (n >= MORCEAUX_PCK.length) { if (window.vqNoter) vqNoter('pck reçu ' + Math.round(recu / 1e6) + ' Mo'); ctrl.close(); return; }
+              const r = await fetchOrigine(MORCEAUX_PCK[n++]);
+              if (!r.ok) throw new Error('morceau ' + MORCEAUX_PCK[n - 1]);
+              lecteur = r.body.getReader();
+            }
+            const { done, value } = await lecteur.read();
+            if (done) { lecteur = null; continue; }
+            recu += value.length;
+            if (barre && TAILLE_PCK) { barre.max = 1; barre.value = Math.min(1, recu / TAILLE_PCK); }
+            ctrl.enqueue(value);
+            return;
+          }
+        } catch (e) {
+          if (window.vqNoter) vqNoter('erreur morceau ' + (e && e.message));
+          ctrl.error(e);
+          if (String(e && e.message).startsWith('morceau')) reparer();
+        }
       }
-    } catch (e) { await reparer(); throw e; }
-    if (window.vqNoter) vqNoter('pck téléchargé ' + Math.round(blobs.reduce((s, b) => s + b.size, 0) / 1e6) + ' Mo');
-    return new Response(new Blob(blobs).stream(), { status: 200, headers: { 'Content-Type': 'application/octet-stream' } });
+    });
+    return new Response(flux, { status: 200, headers: { 'Content-Type': 'application/octet-stream' } });
   };
 </script>
 <script src="index.js"></script>
