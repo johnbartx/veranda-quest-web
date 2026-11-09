@@ -434,13 +434,13 @@ function maj(dt) {
   P.kick = Math.max(0, P.kick - dt * 9);
   J.invu = Math.max(0, J.invu - dt); J.toucheT = Math.max(0, J.toucheT - dt);
   // gags de John (tirer les annule tout de suite)
-  if (E.tir && J.gag) J.gag = null;
-  if (J.gag) { J.gag.t += dt; if (J.gag.t >= J.gag.d) { const suite = J.gag.suite; J.gag = suite ? { type: suite, t: 0, d: 0.8 } : null; } }
+  if ((E.tir && J.gag && !J.gag.bloque) || (J.gag && J.cache)) J.gag = null;   // au changement de phase le tour de pistolet se joue en entier (John 09/11)
+  if (J.gag) { J.gag.t += dt; if (J.gag.t >= J.gag.d) { const suite = J.gag.suite; J.gag = suite ? { type: suite, t: 0, d: 0.8, bloque: J.gag.bloque } : null; } }
   J.repos = E.tir ? 0 : J.repos + dt;
   if (J.repos > 2.6 && !J.gag && J.esq <= 0 && J.toucheT <= 0) { J.gag = { type: 'tourne', t: 0, d: 1.25, suite: 'souffle' }; J.repos = -2; }
   // tir : le clou part de la buse, sur l'axe du canon, jusqu'au réticule
   J.cadence -= dt; J.recul = Math.max(0, J.recul - dt * 7);
-  if (E.tir && J.cadence <= 0 && J.esq <= 0 && J.toucheT <= 0 && J.cacheK < 0.3) { J.cadence = 0.11; J.recul = 1; P.kick = 0.6;
+  if (E.tir && !(J.gag && J.gag.bloque) && J.cadence <= 0 && J.esq <= 0 && J.toucheT <= 0 && J.cacheK < 0.3) { J.cadence = 0.11; J.recul = 1; P.kick = 0.6;
     J.tirs.push({ t: 0 }); SJ('tir'); son(900 + Math.random() * 120, .03, 'square', .018, 300); son(140, .05, 'sine', .03, 60); }
   // flèche ratée (John 08/11 10h27) : elle ne reste pas dans le ciel, elle file loin derrière en rapetissant
   for (const t of J.tirs) { t.t += dt / (t.t < 1 ? 0.09 : 0.45); if (t.t >= 1 && !t.fait) { t.fait = 1; const n = J.fx.length; impact(L.rx, L.ry); t.rate = J.fx.length === n; J.rates = t.rate ? (J.rates || 0) + 1 : 0; if (t.rate) { t.x = L.rx; t.y = L.ry; } } }
@@ -654,7 +654,7 @@ function degats(n, x, y, petit) {
     J.banniere = { txt: ['', '', 'VISE SES DENTS !', 'VISE SA MAIN GAUCHE !', 'VISE SA MAIN DROITE !'][np], t: 2 };
     if (np === 3) direGeant('LÂCHE PAS… LÂCHE PAS…', 1.6); if (np === 4) { direGeant('OUPS !!', 1.4); J.lacheT = 0; J.mains[0].etat = 'repos'; J.mains[0].obj = null; }
     J.projs = J.projs.filter(p => p.gros); J.cracheT = 2.2; son(200, .5, 'triangle', .05, 500);
-    J.gag = { type: 'tourne', t: 0, d: 1.25, suite: 'souffle' }; }
+    J.gag = { type: 'tourne', t: 0, d: 1.25, suite: 'souffle', bloque: 1 }; }
   if (J.pv <= 0) finir(true);
 }
 function touche(c) { (J.causes = J.causes || []).push(c + '@' + J.temps.toFixed(1) + ' x' + P.x.toFixed(0));
