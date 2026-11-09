@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1794180576|3879441';
+const CACHE_VERSION = '1794188650|50987159';
 /** @type {string} */
 const CACHE_PREFIX = 'Veranda Quest-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
