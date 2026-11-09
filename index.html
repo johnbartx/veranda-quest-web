@@ -118,8 +118,11 @@ body {
   // Diagnostic (09/11, temporaire) : les erreurs et les étapes du démarrage s'affichent en bas de l'écran.
   (function () {
     const lignes = [];
+    let erreur = false;
     function noter(t) {
+      if (/^(ERR|JS|PROMESSE|erreur)/.test(String(t))) erreur = true;
       lignes.push(String(t).slice(0, 160)); if (lignes.length > 8) lignes.shift();
+      if (!erreur) return; // n'apparaît qu'en cas d'erreur
       let d = document.getElementById('vq-diag');
       if (!d) { d = document.createElement('pre'); d.id = 'vq-diag';
         d.style.cssText = 'position:fixed;left:6px;right:6px;bottom:6px;z-index:99;margin:0;padding:6px;background:rgba(0,0,0,.75);color:#ffb3a7;font:11px/1.3 monospace;white-space:pre-wrap;pointer-events:none';
@@ -143,8 +146,8 @@ body {
     }).catch(() => {});
   }
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
-  const MORCEAUX_PCK = ["index.pck.b5135519.part0","index.pck.b5135519.part1","index.pck.b5135519.part2","index.pck.b5135519.part3"];
-  const TAILLE_PCK = 138147952; // remplacé à chaque publication
+  const MORCEAUX_PCK = ["index.pck.b49986051.part0","index.pck.b49986051.part1","index.pck.b49986051.part2","index.pck.b49986051.part3"];
+  const TAILLE_PCK = 138148160; // remplacé à chaque publication
   const fetchOrigine = window.fetch.bind(window);
   // Si un morceau manque (ancienne page gardée en mémoire par l'iPhone), on vide la mémoire de l'appli et on recharge, une fois.
   async function reparer() {
@@ -189,7 +192,7 @@ body {
 </script>
 <script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":138147952,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":138148160,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
