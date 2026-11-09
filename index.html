@@ -117,12 +117,34 @@ body {
 		<script>
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
   const MORCEAUX_PCK = ["index.pck.b5135519.part0","index.pck.b5135519.part1","index.pck.b5135519.part2","index.pck.b5135519.part3"];
+  const TAILLE_PCK = 138147952; // remplacé à chaque publication
   const fetchOrigine = window.fetch.bind(window);
+  // Si un morceau manque (ancienne page gardée en mémoire par l'iPhone), on vide la mémoire de l'appli et on recharge, une fois.
+  async function reparer() {
+    try { if (sessionStorage.getItem('vq-repare')) return; sessionStorage.setItem('vq-repare', '1'); } catch (e) {}
+    try { for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (e) {}
+    try { for (const k of await caches.keys()) await caches.delete(k); } catch (e) {}
+    location.reload();
+  }
   window.fetch = async function (entree, options) {
     const url = typeof entree === 'string' ? entree : (entree && entree.url) || '';
     if (url.split('/').pop().split('?')[0] !== 'index.pck') return fetchOrigine(entree, options);
-    const blobs = [];
-    for (const p of MORCEAUX_PCK) { const r = await fetchOrigine(p, { cache: "no-cache" }); if (!r.ok) throw new Error('morceau ' + p); blobs.push(await r.blob()); }
+    const barre = document.getElementById('status-progress');
+    const blobs = []; let recu = 0;
+    try {
+      for (const p of MORCEAUX_PCK) {
+        const r = await fetchOrigine(p);
+        if (!r.ok) throw new Error('morceau ' + p);
+        const lecteur = r.body.getReader(); const bouts = [];
+        for (;;) {
+          const { done, value } = await lecteur.read();
+          if (done) break;
+          bouts.push(value); recu += value.length;
+          if (barre && TAILLE_PCK) { barre.max = 1; barre.value = 0.22 + 0.78 * Math.min(1, recu / TAILLE_PCK); }
+        }
+        blobs.push(new Blob(bouts));
+      }
+    } catch (e) { await reparer(); throw e; }
     return new Response(new Blob(blobs).stream(), { status: 200, headers: { 'Content-Type': 'application/octet-stream' } });
   };
 </script>
