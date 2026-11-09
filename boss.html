@@ -19,7 +19,9 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
 //   Sons.jouer("tir") ; Sons.musique() ; Sons.couperMusique() ; Sons.baisserMusique(true|false) (pause)
 // Le son se débloque tout seul au premier toucher / clic / touche (règle iPhone).
 (function () {
-  const MUSIQUE_GAIN = 0.316;           // -10 dB, comme Sons.MUSIQUE_DB dans Godot
+  const MUSIQUE_GAIN = 0.27;            // -11,4 dB (09/11 John : on n'entendait presque que la musique)
+  // gain par bruitage : crêtes ramenées vers -2/-6 dB (09/11 John : « on entend presque rien des bruits »)
+  const GAIN = {"changement-dessin": 1.88, "changement-etape": 2.69, "chute-finale": 2.0, "defaite": 3.02, "drapeau-blanc": 8, "esquive-reussie": 4.95, "esquive": 2.34, "impact-doux": 8, "impact-point-faible": 4.62, "innocent-chat": 2.85, "innocent-chihuahua": 2.37, "innocent-grand-frere": 5.82, "innocent-mathieu-vol": 2.07, "innocent-petit-frere": 3.02, "innocent-poulet": 3.2, "innocent-sauve": 4.17, "john-touche": 2.29, "main-touchee": 1.4, "mallette-cling": 4.17, "mallette-lancee": 2.95, "oeil": 2.66, "oreille": 6.92, "pigeon-fiente": 1.4, "pigeon-plume": 1.33, "pigeon-roucoule": 5.82, "tir-2": 4.03, "tir-3": 4.22, "tir": 3.63, "tuile-cassee": 2.34, "victoire": 2.51, "vitre-cassee": 4.37};
   const BOUCLE = [36.4090, 136.8761];       // la musique boucle de 36.4090 s à 136.8761 s (l'intro ne joue qu'une fois)
   // intervalle minimum entre deux mêmes sons (s) : évite la saturation quand le jeu en demande beaucoup
   const ECART = { "tir": 0.2, "impact-point-faible": 0.12, "oeil": 2, "oreille": 2, "main-touchee": 0.5,
@@ -49,7 +51,7 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
     if (ctx) { if (ctx.state !== "running") ctx.resume().catch(() => {}); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC(); sortie = ctx.createGain(); sortie.connect(ctx.destination);
-    bus = ctx.createGain(); bus.connect(sortie);
+    bus = ctx.createGain(); const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.15; bus.connect(lim); lim.connect(sortie);   // limiteur : sons plus forts sans saturer
     if (ctx.state !== "running") ctx.resume().catch(() => {});
     const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(sortie); s.start(0);
     charger().then(() => { if (veutMusique) demarrerMusique(); if (veutAmbiance) demarrerAmbiance(); });
@@ -71,7 +73,7 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
     dernier[nom] = t;
     const s = ctx.createBufferSource(); s.buffer = tampons[choix];
     const v = VARIE[nom] || 0; s.playbackRate.value = ((opt && opt.hauteur) || 1) * (1 + (Math.random() * 2 - 1) * v);
-    const g = ctx.createGain(); g.gain.value = (opt && opt.volume !== undefined) ? opt.volume : 1;
+    const g = ctx.createGain(); g.gain.value = ((opt && opt.volume !== undefined) ? opt.volume : 1) * (GAIN[choix] || GAIN[nom] || 1);
     s.connect(g); g.connect(bus); s.start(t);
   }
   function demarrerMusique() {
@@ -88,7 +90,7 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
     ambiance = ctx.createBufferSource(); ambiance.buffer = tampons["ambiance-quartier"];
     ambiance.loop = true; ambiance.loopStart = 0.06; ambiance.loopEnd = Math.min(60.0, ambiance.buffer.duration);
     gainAmb = ctx.createGain(); gainAmb.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gainAmb.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 2);
+    gainAmb.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 2);
     ambiance.connect(gainAmb); gainAmb.connect(sortie); ambiance.start();
   }
   window.Sons = {
@@ -474,7 +476,7 @@ function maj(dt) {
     if (p.z >= 1 && !p.mort) { p.mort = 1;
       if (p.leurre && (J.invu > 0 || J.cacheK > 0.5)) { p.mort = 0; p.rate = 1; J.leurresSauves++; SJ('innocent-sauve'); J.score += 50; J.ouf = 1; const g = geoJohn(J.cote); J.fx.push({ txt: PASSE[p.type], x: Math.max(80, Math.min(w - 80, g.E.x + g.sx * 30 * S)), y: g.E.y - 150 * L.k, t: 1, vert: 1 }); }
       else if (p.leurre) { SJ('innocent-' + p.type); touche(p.type); { const g = geoJohn(J.cote); J.fx.push({ txt: LEURRES[p.type], x: Math.max(90, Math.min(w - 90, g.E.x)), y: g.E.y - 190 * L.k, t: 1.2, rouge: 1 }); } direGeant(GENTIL_JOHN[Math.floor(Math.random() * GENTIL_JOHN.length)], 1.3); }
-      else if (p.gros ? (J.cacheK <= 0.5 && J.invu <= 0) : (p.cote === J.cote && J.invu <= 0 && J.cacheK <= 0.5)) { touche(p.type); const g = geoJohn(J.cote); J.splat = { t: 1, type: p.type, x: g.E.x + g.sx * 40 * L.k, y: g.E.y - 60 * L.k, seed: Math.random() * 100 };
+      else if (p.gros ? (J.cacheK <= 0.5 && J.invu <= 0) : (p.cote === J.cote && J.invu <= 0 && J.cacheK <= 0.5)) { touche(p.type); const g = geoJohn(J.cote); J.splat = { t: 1, type: p.type, x: g.E.x + g.sx * 40 * L.k, y: g.E.y + 30 * L.k, seed: Math.random() * 100 };
         if (p.type === 'bombe') { J.splat = null; J.peinture = { t: 3, teinte: teinteNeuve(), seed: Math.random() * 9 }; SJ('tuile-cassee'); }
         if (p.gros) { J.contrats = []; for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.6, v = (500 + Math.random() * 900) * S; J.contrats.push({ x: w / 2, y: h * 0.5, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 10, n: 'ct' + (i % 8), t: 0, sc: (0.6 + Math.random() * 0.6) * Math.min(w, h) / 400 }); } } }
       else { p.mort = 0; p.rate = 1; const g = geoJohn(J.cote); SJ('esquive-reussie'); if (p.gros && Math.random() < 0.6) direGeant(['MAIS ARRÊTE DE BOUGER !', 'REVIENS ICI, TOI !', 'ELLE ÉTAIT NEUVE, CETTE MALLETTE !'][Math.floor(Math.random() * 3)], 1.2); J.fx.push({ txt: 'ESQUIVÉ !', x: g.E.x + g.sx * 30 * S, y: g.E.y - 150 * L.k, t: 0.9, vert: 1 }); J.ouf = 1; son(520, .12, 'triangle', .03, 900); } } }
@@ -591,14 +593,14 @@ function majDebris(dt) {
 function posProj(p) {
   const g = geoJohn(p.cote), o = proj(p.X0, p.Y0, PL.mains);
   if (p.gros) { // la MALLETTE fonce TOUT DROIT au milieu de l'écran, sans jamais dévier (John 08/11 21h33) : caché, elle passe au-dessus
-    const k = p.z * p.z, b = { x: w / 2, y: h * 0.5 }, r0 = 32 * S, r1 = Math.min(w, h) * 0.5;
+    const k = p.z * p.z, b = { x: w / 2, y: h * 0.6 }, r0 = 32 * S, r1 = Math.min(w, h) * 0.5;
     const up = p.rate ? (p.z - 1) * h * 2.2 : 0;   // esquivée : elle file par-dessus
     return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(Math.min(1, p.z) * Math.PI) * 20 * S - up, r: r0 + (r1 - r0) * Math.min(k, 1.3) }; }
   if (p.leurre) { // les gentils foncent droit sur TOI, au milieu de l'écran (John 08/11 20h51) : il faut se cacher
-    const k = p.z * p.z, e = p.ecart || 0, b = { x: w / 2, y: h * 0.52 - e * h * 0.75 }, r0 = 16 * S, r1 = Math.min(w, h) * 0.42 * (1 - 0.35 * e);
+    const k = p.z * p.z, e = p.ecart || 0, b = { x: w / 2, y: h * 0.6 - e * h * 0.8 }, r0 = 16 * S, r1 = Math.min(w, h) * 0.42 * (1 - 0.35 * e);
     return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(p.z * Math.PI) * 30 * S, r: r0 + (r1 - r0) * k }; }
   // tuiles, vitres et mallette : tout droit sur la tête de John (presque sans courbe)
-  const k = p.z * p.z, e = p.ecart || 0, b = { x: g.E.x + g.sx * 40 * L.k - g.sx * e * w * 0.12, y: g.E.y - 60 * L.k - e * h * 0.6 };
+  const k = p.z * p.z, e = p.ecart || 0, b = { x: g.E.x + g.sx * 40 * L.k - g.sx * e * w * 0.12, y: g.E.y + 30 * L.k - e * h * 0.65 };
   const r0 = 16 * S * (p.gros ? 2 : 1), r1 = Math.min(w, h) * (p.gros ? 0.34 : 0.2) * (1 - 0.3 * e);
   return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(p.z * Math.PI) * 20 * S, r: r0 + (r1 - r0) * k };
 }
