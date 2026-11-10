@@ -460,8 +460,9 @@ function maj(dt) {
   if (J.cracheT <= 0) { J.cracheT = 0.3;
     const libres = J.mains.every(o => o.etat === 'repos') ? J.mains.filter(m => !(J.phase === 3 && m.s < 0) && !(J.phase === 4 && m.s > 0)) : [];
     if (libres.length && J.coupT > 0.8) { const m = libres[Math.floor(Math.random() * libres.length)];
-      const leurre = Math.random() < (ph === 1 ? 0.2 : 0.25);
-      m.obj = leurre ? Object.keys(LEURRES)[Math.floor(Math.random() * 6)] : OBSTACLES[Math.floor(Math.random() * OBSTACLES.length)]; m.spr = m.obj === 'bombe' ? 'bo' + Math.floor(Math.random() * 3) : m.obj;
+      J.leurresDispo = J.leurresDispo || Object.keys(LEURRES);   // chaque gentil n'est lancé qu'UNE fois par partie (John 10/11)
+      const leurre = J.leurresDispo.length > 0 && Math.random() < (ph === 1 ? 0.2 : 0.25);
+      m.obj = leurre ? J.leurresDispo.splice(Math.floor(Math.random() * J.leurresDispo.length), 1)[0] : OBSTACLES[Math.floor(Math.random() * OBSTACLES.length)]; m.spr = m.obj === 'bombe' ? 'bo' + Math.floor(Math.random() * 3) : m.obj;
       m.etat = 'prepare'; m.t = 0; m.cote = J.cote; m.duree = 0.45;
       if (leurre && Math.random() < 0.6) direGeant(m.obj === 'mathieu-vol' ? 'TIENS, TON COLLÈGUE !' : 'ATTRAPE !');
     } else J.cracheT = 0.3; }
