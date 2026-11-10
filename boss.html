@@ -426,6 +426,11 @@ function maj(dt) {
   if (E.cote && J.esq <= 0) { const nc = E.cote === 2 ? 1 - J.cote : (E.cote < 0 ? 0 : 1);
     if (nc !== J.cote) { J.esqDe = J.cote; J.cote = nc; J.esq = ESQ_D; J.gag = null; SJ('esquive'); son(300, .15, 'triangle', .04, 600); } }
   { const d = (rxDe(J.cote) - L.rx) * Math.min(1, dt * 16); L.rx += d; P.yaw += d / (S * ZOOM); }   // le viseur reste sur la même cible quand John change de côté
+  // début de partie : la caméra est déjà calée sur son front, sans aucun glissement (John 10/11)
+  if (!BOT && J.temps < 1.6 && J.libreT > 0) { J.guide = 0;
+    for (let i = 0; i < 3; i++) { const c0 = ptGeant(350, 210); P.yaw += 10; const c1 = ptGeant(350, 210); P.yaw -= 10; P.pitch += 10; const c2 = ptGeant(350, 210); P.pitch -= 10;
+      const kx = (c1.x - c0.x) / 10 || -S, ky = (c2.y - c0.y) / 10 || -S;
+      P.yaw = Math.max(-760, Math.min(860, P.yaw - (c0.x - L.rx) / kx)); P.pitch = Math.max(-820, Math.min(80, P.pitch - (c0.y - L.ry) / ky)); } }
   const cible = J.cote === 0 ? -XR : XR, ancX = P.x;
   P.x += (cible - P.x) * Math.min(1, dt * 14);
   const vx = (P.x - ancX) / Math.max(dt, 1e-3);
@@ -1030,7 +1035,7 @@ function boucle(n) { const brut = n - der, dt = Math.min(0.05, brut / 1000); der
   requestAnimationFrame(boucle); }
 const CHAUD = Object.keys(IMG);
 requestAnimationFrame(boucle);
-window.__vq = { demarrer, finir: g => finir(g), L, get J() { return J; }, get etat() { return etat; }, P, posMain, pointsFaibles, proj, S: () => S, geoJohn, degats: (n, x, y) => degats(n, x, y), oiseau: (x, y) => toucheOiseau(x, y), impact: (x, y) => impact(x, y), posProj: p => posProj(p) };
+window.__vq = { demarrer, finir: g => finir(g), L, get J() { return J; }, get etat() { return etat; }, P, posMain, pointsFaibles, proj, S: () => S, geoJohn, degats: (n, x, y) => degats(n, x, y), oiseau: (x, y) => toucheOiseau(x, y), impact: (x, y) => impact(x, y), posProj: p => posProj(p), ptGeant: (a, b) => ptGeant(a, b) };
 })();
 
 </script>
