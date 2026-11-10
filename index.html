@@ -112,6 +112,7 @@ body {
 			<img id="status-splash" style="display:none" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
+			<div id="vq-version" style="position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.55);font:13px/1 sans-serif;pointer-events:none"></div>
 		</div>
 
 		<script>
@@ -137,6 +138,22 @@ body {
     let mem = '';
     try { if (navigator.deviceMemory) mem = ' mem ' + navigator.deviceMemory + ' Go'; } catch (e) {}
     setTimeout(() => noter('page v09-11-0840 flux' + mem), 50);
+  })();
+  // Numéro de version (Alpha 0.1.x…) : monté tout seul par maj_web_appli.sh à chaque publication.
+  // Au lancement, on demande au site le dernier numéro ; si ce téléphone a une page plus ancienne, on recharge la nouvelle (une fois).
+  const VERSION_APPLI = "Alpha 0.1.0";
+  window.VQ_VERSION = VERSION_APPLI;
+  (function () {
+    const e = document.getElementById('vq-version'); if (e) e.textContent = VERSION_APPLI;
+    fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.ok ? r.json() : null).then((d) => {
+      if (!d || !d.version || d.version === VERSION_APPLI) return;
+      let deja = '';
+      try { deja = sessionStorage.getItem('vq-maj') || ''; sessionStorage.setItem('vq-maj', d.version); } catch (x) {}
+      if (deja === d.version) return; // déjà essayé : on ne boucle pas
+      if (window.vqNoter) vqNoter('nouvelle version ' + d.version + ' (page ' + VERSION_APPLI + ')');
+      const u = new URL(location.href); u.searchParams.set('v', d.version.replace(/\s+/g, '-'));
+      location.replace(u.toString());
+    }).catch(() => {});
   })();
   // Plus de service worker (il gardait d'anciennes versions sur l'iPhone) : on retire ceux qui restent.
   if ('serviceWorker' in navigator) {
