@@ -141,7 +141,7 @@ body {
   })();
   // Numéro de version (Alpha 0.1.x…) : monté tout seul par maj_web_appli.sh à chaque publication.
   // Au lancement, on demande au site le dernier numéro ; si ce téléphone a une page plus ancienne, on recharge la nouvelle (une fois).
-  const VERSION_APPLI = "Alpha 0.1.2";
+  const VERSION_APPLI = "Alpha 0.1.3";
   window.VQ_VERSION = VERSION_APPLI;
   (function () {
     const e = document.getElementById('vq-version'); if (e) e.textContent = VERSION_APPLI;
@@ -163,8 +163,8 @@ body {
     }).catch(() => {});
   }
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
-  const MORCEAUX_PCK = ["index.pck.b4275653.part0","index.pck.b4275653.part1","index.pck.b4275653.part2","index.pck.b4275653.part3"];
-  const TAILLE_PCK = 134541748; // remplacé à chaque publication
+  const MORCEAUX_PCK = ["index.pck.b3855651.part0","index.pck.b3855651.part1","index.pck.b3855651.part2","index.pck.b3855651.part3"];
+  const TAILLE_PCK = 134541716; // remplacé à chaque publication
   const fetchOrigine = window.fetch.bind(window);
   // Si un morceau manque (ancienne page gardée en mémoire par l'iPhone), on vide la mémoire de l'appli et on recharge, une fois.
   async function reparer() {
@@ -209,7 +209,7 @@ body {
 </script>
 <script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":134541748,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":134541716,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
