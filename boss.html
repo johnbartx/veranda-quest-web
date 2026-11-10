@@ -19,9 +19,9 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
 //   Sons.jouer("tir") ; Sons.musique() ; Sons.couperMusique() ; Sons.baisserMusique(true|false) (pause)
 // Le son se débloque tout seul au premier toucher / clic / touche (règle iPhone).
 (function () {
-  const MUSIQUE_GAIN = 0.27;            // -11,4 dB (09/11 John : on n'entendait presque que la musique)
+  const MUSIQUE_GAIN = 0.56;  // 10/11 John : musique encore trop faible → +3,8 dB au-dessus du N1 //           // ≈ -25,6 LUFS, même niveau que la musique du N1 (John 10/11)
   // gain par bruitage : crêtes ramenées vers -2/-6 dB (09/11 John : « on entend presque rien des bruits »)
-  const GAIN = {"changement-dessin": 1.88, "changement-etape": 2.69, "chute-finale": 2.0, "defaite": 3.02, "drapeau-blanc": 8, "esquive-reussie": 4.95, "esquive": 2.34, "impact-doux": 8, "impact-point-faible": 4.62, "innocent-chat": 2.85, "innocent-chihuahua": 2.37, "innocent-grand-frere": 5.82, "innocent-mathieu-vol": 2.07, "innocent-petit-frere": 3.02, "innocent-poulet": 3.2, "innocent-sauve": 4.17, "john-touche": 2.29, "main-touchee": 1.4, "mallette-cling": 4.17, "mallette-lancee": 2.95, "oeil": 2.66, "oreille": 6.92, "pigeon-fiente": 1.4, "pigeon-plume": 1.33, "pigeon-roucoule": 5.82, "tir-2": 4.03, "tir-3": 4.22, "tir": 3.63, "tuile-cassee": 2.34, "victoire": 2.51, "vitre-cassee": 4.37};
+  const GAIN = {"changement-dessin": 1.13, "changement-etape": 1.61, "chute-finale": 1.2, "defaite": 1.81, "drapeau-blanc": 4.8, "esquive-reussie": 2.97, "esquive": 1.4, "impact-doux": 4.8, "impact-point-faible": 2.77, "innocent-chat": 1.71, "innocent-chihuahua": 1.42, "innocent-grand-frere": 3.49, "innocent-mathieu-vol": 1.24, "innocent-petit-frere": 1.81, "innocent-poulet": 1.92, "innocent-sauve": 2.5, "john-touche": 1.37, "main-touchee": 0.84, "mallette-cling": 2.5, "mallette-lancee": 1.77, "oeil": 1.6, "oreille": 4.15, "pigeon-fiente": 0.84, "pigeon-plume": 0.8, "pigeon-roucoule": 3.49, "tir-2": 2.42, "tir-3": 2.53, "tir": 2.18, "tuile-cassee": 1.4, "victoire": 1.51, "vitre-cassee": 2.62};   // ×0,6 (10/11 : certains sons trop forts)
   const BOUCLE = [36.4090, 136.8761];       // la musique boucle de 36.4090 s à 136.8761 s (l'intro ne joue qu'une fois)
   // intervalle minimum entre deux mêmes sons (s) : évite la saturation quand le jeu en demande beaucoup
   const ECART = { "tir": 0.2, "impact-point-faible": 0.12, "oeil": 2, "oreille": 2, "main-touchee": 0.5,
@@ -90,7 +90,7 @@ window.SONS_DATA = {"ambiance-quartier": "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLj
     ambiance = ctx.createBufferSource(); ambiance.buffer = tampons["ambiance-quartier"];
     ambiance.loop = true; ambiance.loopStart = 0.06; ambiance.loopEnd = Math.min(60.0, ambiance.buffer.duration);
     gainAmb = ctx.createGain(); gainAmb.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gainAmb.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 2);
+    gainAmb.gain.exponentialRampToValueAtTime(0.6, ctx.currentTime + 2);
     ambiance.connect(gainAmb); gainAmb.connect(sortie); ambiance.start();
   }
   window.Sons = {
@@ -253,8 +253,8 @@ cv.addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('mouseup', () => { sourisTir = false; });
 addEventListener('mousemove', e => { if (document.pointerLockElement === cv) { sourisDX += e.movementX; sourisDY += e.movementY; } });
 function lireEntrees(dt) {
-  const cj = v => v * (0.3 + 0.7 * Math.abs(v));   // doux au centre pour viser fin, rapide en poussant à fond
-  let lx = sourisDX * 0.8 + cj(joy.dx) * 720 * dt, ly = sourisDY * 0.8 + cj(joy.dy) * 520 * dt, cache = tactile ? joy.id === null : !!K.Space, tir = tactile ? joy.id !== null : sourisTir, cote = 0;
+  const cj = v => v * (0.45 + 0.55 * Math.abs(v));   // doux au centre pour viser fin, rapide en poussant à fond
+  let lx = sourisDX * 0.8 + cj(joy.dx) * 1250 * dt, ly = sourisDY * 0.8 + cj(joy.dy) * 900 * dt, cache = tactile ? joy.id === null : !!K.Space, tir = tactile ? joy.id !== null : sourisTir, cote = 0;
   lookDX = lookDY = sourisDX = sourisDY = 0; demandeCote = 0;
   const vl = 520 * dt; if (K.ArrowLeft) lx -= vl * 1.4; if (K.ArrowRight) lx += vl * 1.4; if (K.ArrowUp) ly -= vl; if (K.ArrowDown) ly += vl;
   if (K.KeyJ || K.Enter) tir = true;
@@ -291,7 +291,7 @@ const PASSE = { chihuahua: 'WOUF !', 'petit-frere': 'ENCORE !', 'grand-frere': '
 function nouvellePartie() { try { if (window.Sons) { Sons.musique(); if (Sons.ambiance) Sons.ambiance(); } } catch (e) {}
   J = { pv: PV_MAX, phase: 1, etoiles: 3, score: 0, temps: 0, invu: 0, recul: 0, cadence: 0, flashRouge: 0, splat: null,
     cote: 0, esq: 0, esqDe: 0, toucheT: 0, tirs: [], projs: [], fx: [], debris: [], clous: [], mains: [mainNeuve(-1), mainNeuve(1)], cracheT: 2.2, coupT: 6,
-    flash: 0, secousse: 0, banniere: { txt: 'VISE SON FRONT !', t: 2.2 }, sg: 'geant', lacheT: 0, indice: 6, fin: 0, finT: 0, stade: 0, gag: null, combo: 0, repos: 0,
+    flash: 0, secousse: 0, banniere: null, sg: 'geant', lacheT: 0, indice: 6, fin: 0, finT: 0, stade: 0, gag: null, combo: 0, repos: 0,
     pose: 'j-vise', poseT: 0, gBulle: null, megaT: 2, mega: 0, leurresTouches: 0, leurresSauves: 0, scoreRebond: 0 };
   L.rx = rxDe(0);
   // au départ le réticule est sur son nez
@@ -439,8 +439,8 @@ function maj(dt) {
   J.repos = E.tir ? 0 : J.repos + dt;
   if (J.repos > 2.6 && !J.gag && J.esq <= 0 && J.toucheT <= 0) { J.gag = { type: 'tourne', t: 0, d: 1.25, suite: 'souffle' }; J.repos = -2; }
   // tir : le clou part de la buse, sur l'axe du canon, jusqu'au réticule
-  J.cadence -= dt; J.recul = Math.max(0, J.recul - dt * 7);
-  if (E.tir && !(J.gag && J.gag.bloque) && J.cadence <= 0 && J.esq <= 0 && J.toucheT <= 0 && J.cacheK < 0.3) { J.cadence = 0.11; J.recul = 1; P.kick = 0.6;
+  J.cadence -= dt; J.recul = Math.max(0, J.recul - dt * 4.5);
+  if (E.tir && !(J.gag && J.gag.bloque) && J.cadence <= 0 && J.esq <= 0 && J.toucheT <= 0 && J.cacheK < 0.3) { J.cadence = 0.12;   // rafales plus lentes : on voit le recul de John (John 10/11) J.recul = 1; P.kick = 0.6;
     J.tirs.push({ t: 0 }); SJ('tir'); son(900 + Math.random() * 120, .03, 'square', .018, 300); son(140, .05, 'sine', .03, 60); }
   // flèche ratée (John 08/11 10h27) : elle ne reste pas dans le ciel, elle file loin derrière en rapetissant
   for (const t of J.tirs) { t.t += dt / (t.t < 1 ? 0.09 : 0.45); if (t.t >= 1 && !t.fait) { t.fait = 1; const n = J.fx.length; impact(L.rx, L.ry); t.rate = J.fx.length === n; J.rates = t.rate ? (J.rates || 0) + 1 : 0; if (t.rate) { t.x = L.rx; t.y = L.ry; } } }
@@ -478,6 +478,8 @@ function maj(dt) {
     if (p.z >= 1 && !p.mort) { p.mort = 1;
       if (p.leurre && (J.invu > 0 || J.cacheK > 0.5)) { p.mort = 0; p.rate = 1; J.leurresSauves++; SJ('innocent-sauve'); J.score += 50; J.ouf = 1; const g = geoJohn(J.cote); J.fx.push({ txt: PASSE[p.type], x: Math.max(80, Math.min(w - 80, g.E.x + g.sx * 30 * S)), y: g.E.y - 150 * L.k, t: 1, vert: 1 }); }
       else if (p.leurre) { SJ('innocent-' + p.type); touche(p.type); { const g = geoJohn(J.cote); J.fx.push({ txt: LEURRES[p.type], x: Math.max(90, Math.min(w - 90, g.E.x)), y: g.E.y - 190 * L.k, t: 1.2, rouge: 1 }); } direGeant(GENTIL_JOHN[Math.floor(Math.random() * GENTIL_JOHN.length)], 1.3); }
+      else if (p.type === 'bombe') { J.peinture = { t: 3, teinte: teinteNeuve(), seed: Math.random() * 9 }; SJ('tuile-cassee'); SJ('impact-doux'); J.secousse = Math.max(J.secousse, 0.6);   // pas abattue : elle explose sur l'écran, même caché (John 10/11)
+        if (p.cote === J.cote && J.invu <= 0 && J.cacheK <= 0.5) touche(p.type); }
       else if (p.gros ? (J.cacheK <= 0.5 && J.invu <= 0) : (p.cote === J.cote && J.invu <= 0 && J.cacheK <= 0.5)) { touche(p.type); const g = geoJohn(J.cote); J.splat = { t: 1, type: p.type, x: g.E.x + g.sx * 40 * L.k, y: g.E.y + 30 * L.k, seed: Math.random() * 100 };
         if (p.type === 'bombe') { J.splat = null; J.peinture = { t: 3, teinte: teinteNeuve(), seed: Math.random() * 9 }; SJ('tuile-cassee'); }
         if (p.gros) { J.contrats = []; for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.6, v = (500 + Math.random() * 900) * S; J.contrats.push({ x: w / 2, y: h * 0.5, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 10, n: 'ct' + (i % 8), t: 0, sc: (0.6 + Math.random() * 0.6) * Math.min(w, h) / 400 }); } } }
@@ -516,10 +518,10 @@ function majOiseaux(dt) {
   J.oisT = (J.oisT === undefined ? 3 : J.oisT) - dt;
   if (J.oisT <= 0 && J.oiseaux.length < 2) { J.oisT = 9 + Math.random() * 8; const sens = Math.random() < 0.5 ? 1 : -1;
     const z = [[0.75, 50, 1], [0.48, 150, 0.7], [0.28, 300, 0.45]][Math.floor(Math.random() * 3)];   // près / loin / très loin
-    J.oiseaux.push({ X: GX - sens * 1100, Y: (z[0] < 0.3 ? -520 : z[0] < 0.5 ? -300 : -40) + Math.random() * (z[0] < 0.5 ? 260 : 300), v: sens * (170 + Math.random() * 90) * z[2], t: Math.random(), nu: 0, a: Math.random() * 6, caca: z[0] > 0.6 && Math.random() < 0.6, k: z[0], pts: z[1] });
+    J.oiseaux.push({ X: GX - sens * 1100, Y: (z[0] < 0.3 ? -360 : z[0] < 0.5 ? -300 : -40) + Math.random() * (z[0] < 0.3 ? 220 : z[0] < 0.5 ? 260 : 300), v: sens * (170 + Math.random() * 90) * z[2], t: Math.random(), nu: 0, a: Math.random() * 6, caca: z[0] > 0.6 && Math.random() < 0.6, k: z[0], pts: z[1] });
     SJ('pigeon-roucoule'); }
   for (const o of J.oiseaux) { if (o.tremble > 0) o.tremble -= dt; if (o.grille) { o.t += dt; o.vy += 1500 * dt; o.Y += o.vy * dt; o.X += o.v * 0.15 * dt; continue; }
-    o.t += dt; o.X += o.v * dt; o.Y += Math.sin(o.t * 2.2 + o.a) * 22 * dt + (o.nu ? -40 * dt : 0);
+    o.t += dt; o.X += o.v * dt; o.Y = Math.max(-380, o.Y + Math.sin(o.t * 2.2 + o.a) * 22 * dt + (o.nu ? -40 * dt : 0));
     // il passe au-dessus du concurrent… et lâche une fiente
     if (!o.nu && o.caca && Math.abs(o.X - GX) < 60 && J.fin === 0) { o.caca = false; J.fientes.push({ X: o.X, Y: o.Y + 30, vy: 0 }); } }
   J.oiseaux = J.oiseaux.filter(o => Math.abs(o.X - GX) < 1300 && o.Y < 1400);
@@ -596,14 +598,14 @@ function posProj(p) {
   const g = geoJohn(p.cote), o = proj(p.X0, p.Y0, PL.mains);
   if (p.gros) { // la MALLETTE fonce TOUT DROIT au milieu de l'écran, sans jamais dévier (John 08/11 21h33) : caché, elle passe au-dessus
     const k = p.z * p.z, b = { x: w / 2, y: h * 0.6 }, r0 = 32 * S, r1 = Math.min(w, h) * 0.5;
-    const up = p.rate ? (p.z - 1) * h * 2.2 : 0;   // esquivée : elle file par-dessus
+    const up = 0;   // esquivée : elle file par-dessus
     return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(Math.min(1, p.z) * Math.PI) * 20 * S - up, r: r0 + (r1 - r0) * Math.min(k, 1.3) }; }
   if (p.leurre) { // les gentils foncent droit sur TOI, au milieu de l'écran (John 08/11 20h51) : il faut se cacher
-    const k = p.z * p.z, e = p.ecart || 0, b = { x: w / 2, y: h * 0.6 - e * h * 0.8 }, r0 = 16 * S, r1 = Math.min(w, h) * 0.42 * (1 - 0.35 * e);
+    const k = p.z * p.z, b = { x: w / 2, y: h * 0.6 }, r0 = 16 * S, r1 = Math.min(w, h) * 0.42;   // esquivé : il fonce quand même tout droit, mais transparent (John 10/11)
     return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(p.z * Math.PI) * 30 * S, r: r0 + (r1 - r0) * k }; }
   // tuiles, vitres et mallette : tout droit sur la tête de John (presque sans courbe)
-  const k = p.z * p.z, e = p.ecart || 0, b = { x: g.E.x + g.sx * 40 * L.k - g.sx * e * w * 0.12, y: g.E.y + 30 * L.k - e * h * 0.65 };
-  const r0 = 16 * S * (p.gros ? 2 : 1), r1 = Math.min(w, h) * (p.gros ? 0.34 : 0.2) * (1 - 0.3 * e);
+  const k = p.z * p.z, b = p.cible || (p.cible = { x: g.E.x + g.sx * 40 * L.k, y: g.E.y + 30 * L.k });   // même trajectoire, que John se cache ou pas (John 10/11)
+  const r0 = 16 * S * (p.gros ? 2 : 1), r1 = Math.min(w, h) * (p.gros ? 0.34 : 0.2);
   return { x: o.x + (b.x - o.x) * k, y: o.y + (b.y - o.y) * k - Math.sin(p.z * Math.PI) * 20 * S, r: r0 + (r1 - r0) * k };
 }
 function eclats(type, x, y, r) {
@@ -637,9 +639,9 @@ function impact(x, y) {
     J.reac = 0.4; J.reacZ = z[3]; SJ('impact-doux');   // plus de cri « haaaa » (John 08/11 20h05) J.fx.push({ eclab: 1, x, y, t: 0.25 }); splatch(x, y, 20 * S, true);
     if (!J.reacDit || T - J.reacDit > 2.2) { J.reacDit = T; direGeant(z[3].startsWith('oeil') ? (Math.random() < .5 ? 'MON ŒIL !!' : 'JE VOIS PLUS RIEN !') : (Math.random() < .5 ? 'AÏE, MON OREILLE !' : 'HEIN ? QUOI ?'), 0.9); }
     points(30, x, y); return; } }
-  for (const wp of pointsFaibles()) if (Math.hypot(wp.x - x, wp.y - y) < wp.r) { if (wp.cible !== 'main' && Math.random() < 0.3) planter(x, y); if (wp.m) { SJ('impact-doux'); wp.m.mal = 0.55; } degats(1, x, y); return; }
+  for (const wp of pointsFaibles()) if (Math.hypot(wp.x - x, wp.y - y) < wp.r) { if (wp.cible !== 'main' && Math.random() < 0.3) planter(x, y); if (wp.m) { SJ('impact-doux'); wp.m.mal = 0.55; } degats(1.1, x, y); return; }
   const g = geantMonde(), a = proj(g.x - 330 * GS, g.y, PL.geant), b = proj(g.x + 330 * GS, g.y + 900 * GS, PL.geant);
-  if (x > a.x && x < b.x && y > a.y && y < b.y && opaqueGeant(x, y)) { if (Math.random() < 0.3) planter(x, y); if (Math.random() < 0.25) degats(0.25, x, y, true); J.fx.push({ eclab: 1, x, y, t: 0.25 }); }
+  if (x > a.x && x < b.x && y > a.y && y < b.y && opaqueGeant(x, y)) { if (Math.random() < 0.3) planter(x, y); if (Math.random() < 0.25) degats(0.27, x, y, true); J.fx.push({ eclab: 1, x, y, t: 0.25 }); }
 }
 // les clous restent plantés dans le concurrent
 function planter(x, y) { const q = versGeant(x, y); if (q.py < 30 || q.py > 900 || !opaqueGeant(x, y)) return; const gj = geoJohn(J.cote); J.clous.push({ px: q.px, py: q.py, a: Math.atan2(gj.dir.y, gj.dir.x) + (Math.random() - .5) * 0.3 }); if (J.clous.length > 22) J.clous.shift(); }
@@ -750,7 +752,7 @@ function dessiner() {
       const sc = q.r * 2 / Math.max(i.width, i.height);
       if (p.leurre) texte('NE TIRE PAS ! CACHE-TOI !', q.x, q.y - q.r * 1.3, Math.max(13, Math.min(20, q.r * 0.3)), '#c8ffb0');
       // mallette : si on est caché, elle devient transparente pour ne pas gêner la vue (John 08/11 21h56)
-      const al = p.gros ? (p.rate ? Math.max(0, 0.35 - (p.z - 1) * 1.2) : J.cacheK > 0.5 ? Math.max(0.35, 1 - Math.max(0, p.z - 0.45) * 2.2) : 1) : 1;
+      const al = true ? (p.rate ? Math.max(0, 0.35 - (p.z - 1) * 1.2) : J.cacheK > 0.5 ? Math.max(0.35, 1 - Math.max(0, p.z - 0.45) * 2.2) : 1) : 1;
       if (al <= 0) continue; if (al < 1) cx.globalAlpha = al;
       img(p.spr || p.type, q.x, q.y, sc, .5, .5, p.sens < 0, p.leurre ? Math.sin(p.rot) * 0.5 : p.type === 'bombe' ? Math.sin(p.rot) * 0.3 : p.rot); cx.globalAlpha = 1; }
   }
@@ -986,7 +988,7 @@ function hud() {
       cx.save(); cx.fillStyle = 'rgba(30,15,5,0.25)'; cx.fillRect(0, 0, w, h); cx.restore();
       cx.save(); cx.translate(w / 2, h * 0.27); cx.scale(pu, pu); texte('LÂCHE L\'ÉCRAN !', 0, 0, Math.min(w * 0.13, 60), '#ffd23c'); cx.restore();
       texte(J.ralentiTxt || 'John se cache… et ça passe au-dessus !', w / 2, h * 0.27 + Math.min(w * 0.12, 52), Math.min(w * 0.055, 22)); }
-    if (J.temps < 6) { texte('Doigt posé : John vise et TIRE tout seul', w / 2, h * 0.3, 15 * u); texte('LÂCHE pour te cacher : mallette… et gentils !', w / 2, h * 0.3 + 22 * u, 15 * u, '#ffc928'); }
+    
   } else if (etat === 'jeu' && J.temps < 8) texte('Souris : viser · Clic : tirer · Espace : esquiver', w / 2, h - 22 * u, 13 * u);
   if (J.banniere) { const k = Math.min(1, (1.8 - J.banniere.t) * 6); texte(J.banniere.txt, w / 2, h * 0.36, 32 * u * k); }
   if (etat === 'pause') { cx.fillStyle = 'rgba(0,0,0,0.5)'; cx.fillRect(0, 0, w, h); const c = cadre(0.42);
@@ -1001,7 +1003,7 @@ function ecranTitre() {
   const c = cadre(0.47), lx = c.y + c.h * 0.14, pas = c.h * 0.085;
   texte('NIVEAU 9', w / 2, lx, 20 * u, '#7a4a26', 'center', null);
   texte('LE CONCURRENT GÉANT', w / 2, lx + pas, 26 * u, '#9a3fc0', 'center', ENCRE);
-  const lignes = ['Casse ses tuiles et ses vitres', 'au pistolet à silicone périmé !', 'Vise son FRONT, ses DENTS,', 'puis ses deux MAINS !', 'LÂCHE l\'écran pour te cacher !', 'Gentils : ne tire pas (points en moins),', 'cache-toi quand ils foncent sur toi !'];
+  const lignes = ['Doigt posé : John vise et TIRE tout seul !', 'LÂCHE l\'écran pour te cacher.', 'Casse ses tuiles, vitres et bombes,', 'vise son FRONT, ses DENTS, ses MAINS !', 'Gentils : ne tire pas (points en moins),', 'cache-toi quand ils foncent sur toi !'];
   lignes.forEach((t, i) => texte(t, w / 2, lx + pas * (2.3 + i * 0.8), 15 * u, ENCRE, 'center', null));
   texte('Touche l\'écran pour commencer', w / 2, c.y + c.h + 28 * u, 18 * u * (1 + Math.sin(T * 4) * 0.04));
 }
