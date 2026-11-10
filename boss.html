@@ -295,8 +295,10 @@ function nouvellePartie() { try { if (window.Sons) { Sons.musique(); if (Sons.am
     pose: 'j-vise', poseT: 0, gBulle: null, megaT: 2, mega: 0, leurresTouches: 0, leurresSauves: 0, scoreRebond: 0 };
   L.rx = rxDe(0);
   // au départ le réticule est sur son nez
-  Object.assign(P, { x: -XR, z: 0, y: 0, vy: 0, yaw: GX - W / 2 + XR * D0 / PL.geant - 12, pitch: -300, pas: 0, vit: 0, kick: 0, roll: 0, sec: 0 });
+  camDepart();
 }
+// la caméra de la partie = EXACTEMENT celle de l'écran titre (John 10/11 : aucun mouvement en touchant la carte)
+function camDepart() { Object.assign(P, { x: -XR, z: 0, y: 0, vy: 0, yaw: GX - W / 2 + XR * D0 / PL.geant - 12, pitch: -300, pas: 0, vit: 0, kick: 0, roll: 0, sec: 0 }); }
 function mainNeuve(s) { return { s, etat: 'repos', t: 0, obj: null, cote: 0 }; }
 function demarrer() {
   // (plus de 2e AudioContext : tout le son passe par Sons, sons.js)
@@ -404,6 +406,7 @@ function maj(dt) {
   // 1re mallette : RALENTI + « ESQUIVE ! » en gros pour bien faire comprendre
   if (J.ralenti > 0) { J.ralenti -= dt; if (J.esq > 0 || J.cache) J.ralenti = Math.min(J.ralenti, 0.15); dt *= 0.22; }
   J.temps += dt; const E = BOT ? bot() : lireEntrees(dt);
+  if (!BOT && !J.aTouche) { if (!E.cache) J.aTouche = 1; else { E.cache = false; E.tir = false; } }   // tant qu'on n'a pas posé le doigt : John ne bouge pas
   // visée assistée (John 08/11) : la caméra glisse toute seule vers la tuile/vitre qui arrive,
   // puis revient doucement sur le concurrent quand on ne touche plus au joystick
   if (!BOT) { J.libreT = (Math.abs(E.lx) + Math.abs(E.ly) > 0.5) ? 0 : (J.libreT || 0) + dt;
@@ -411,8 +414,9 @@ function maj(dt) {
     let cible = null, g = 0;
     J.guide = Math.max(0, (J.guide || 0) - dt);
     // plus de visée automatique vers la mallette (John 08/11 20h43 : « on se débrouille »)
+    if (!J.aTouche) J.guide = 0;
     if (J.guide > 0 && pointsFaibles()[0]) { cible = pointsFaibles()[0]; g = 3.5; }
-    else if (J.libreT > 1.2 && J.repos > 1.2 && J.phase <= 2) { cible = ptGeant(350, 210); g = 2.2; }
+    else if (J.aTouche && J.libreT > 1.2 && J.repos > 1.2 && J.phase <= 2) { cible = ptGeant(350, 210); g = 2.2; }
     if (cible) { const f = Math.min(1, dt * g), lim = 900 * dt;
       E.lx += Math.max(-lim, Math.min(lim, (cible.x - L.rx) / S * f)); E.ly += Math.max(-lim, Math.min(lim, (cible.y - L.ry) / S * f)); } }
   P.yaw = Math.max(-760, Math.min(860, P.yaw + E.lx)); P.pitch = Math.max(-820, Math.min(80, P.pitch + E.ly));   // on peut viser bien au-dessus du boss (pigeons très loin)
@@ -426,11 +430,6 @@ function maj(dt) {
   if (E.cote && J.esq <= 0) { const nc = E.cote === 2 ? 1 - J.cote : (E.cote < 0 ? 0 : 1);
     if (nc !== J.cote) { J.esqDe = J.cote; J.cote = nc; J.esq = ESQ_D; J.gag = null; SJ('esquive'); son(300, .15, 'triangle', .04, 600); } }
   { const d = (rxDe(J.cote) - L.rx) * Math.min(1, dt * 16); L.rx += d; P.yaw += d / (S * ZOOM); }   // le viseur reste sur la même cible quand John change de côté
-  // début de partie : la caméra est déjà calée sur son front, sans aucun glissement (John 10/11)
-  if (!BOT && J.temps < 1.6 && J.libreT > 0) { J.guide = 0;
-    for (let i = 0; i < 3; i++) { const c0 = ptGeant(350, 210); P.yaw += 10; const c1 = ptGeant(350, 210); P.yaw -= 10; P.pitch += 10; const c2 = ptGeant(350, 210); P.pitch -= 10;
-      const kx = (c1.x - c0.x) / 10 || -S, ky = (c2.y - c0.y) / 10 || -S;
-      P.yaw = Math.max(-760, Math.min(860, P.yaw - (c0.x - L.rx) / kx)); P.pitch = Math.max(-820, Math.min(80, P.pitch - (c0.y - L.ry) / ky)); } }
   const cible = J.cote === 0 ? -XR : XR, ancX = P.x;
   P.x += (cible - P.x) * Math.min(1, dt * 14);
   const vx = (P.x - ancX) / Math.max(dt, 1e-3);
@@ -1034,6 +1033,7 @@ function boucle(n) { const brut = n - der, dt = Math.min(0.05, brut / 1000); der
     while (CHAUD.length && k < 6) { const i = IMG[CHAUD[0]]; if (!i.complete) break; if (i.width) cx.drawImage(i, 0, 0, 2, 2); CHAUD.shift(); k++; } cx.restore(); }
   requestAnimationFrame(boucle); }
 const CHAUD = Object.keys(IMG);
+camDepart();
 requestAnimationFrame(boucle);
 window.__vq = { demarrer, finir: g => finir(g), L, get J() { return J; }, get etat() { return etat; }, P, posMain, pointsFaibles, proj, S: () => S, geoJohn, degats: (n, x, y) => degats(n, x, y), oiseau: (x, y) => toucheOiseau(x, y), impact: (x, y) => impact(x, y), posProj: p => posProj(p), ptGeant: (a, b) => ptGeant(a, b) };
 })();
