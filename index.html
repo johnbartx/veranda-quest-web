@@ -124,7 +124,7 @@ body {
 			<script>
 			(function () {
 				var p = document.getElementById('status-progress'), boite = document.getElementById('vq-charge');
-				var plein = document.getElementById('vq-charge-plein'), peggy = document.getElementById('vq-peggy');
+				var plein = document.getElementById('vq-charge-plein'), peggy = document.getElementById('vq-peggy'); var texte = document.getElementById('vq-charge-texte');
 				var vu = 0, t = setInterval(function () {
 					if (!document.body.contains(p)) { clearInterval(t); return; }
 					boite.style.display = p.style.display === 'block' ? 'block' : 'none';
@@ -132,6 +132,7 @@ body {
 					vu = Math.max(vu, Math.min(1, v));
 					var pc = (vu * 100).toFixed(1) + '%';
 					plein.style.width = pc; peggy.style.left = pc;
+					texte.textContent = 'Chargement… ' + Math.floor(vu * 100) + ' %';
 				}, 100);
 			})();
 			</script>
