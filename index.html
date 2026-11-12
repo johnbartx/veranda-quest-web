@@ -89,6 +89,15 @@ body {
 	text-align: center;
 	z-index: 1;
 }
+
+/* Barre de chargement rose pâle avec Peggy qui court (John 12/11) ; la vraie <progress> reste, invisible, et la nourrit */
+#status-progress { opacity: 0; pointer-events: none; }
+#vq-charge { position: absolute; left: 50%; bottom: 14%; width: min(78vw, 420px); transform: translateX(-50%); display: none; }
+#vq-charge-piste { position: relative; height: 26px; border-radius: 15px; background: #ffe3ec; border: 3px solid #3b2416; box-shadow: 0 4px 0 rgba(0,0,0,.45); overflow: hidden; }
+#vq-charge-plein { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 12px; background: linear-gradient(#ffc2d6, #f78fb3); transition: width .25s linear; }
+#vq-peggy { position: absolute; z-index: 2; bottom: 27px; left: 0%; width: 86px; height: 67px; margin-left: -70px; background: url(peggy-course.webp) 0 0 / 1032px 67px no-repeat; animation: vq-peggy-court 1s steps(12) infinite; transition: left .25s linear; }
+@keyframes vq-peggy-court { to { background-position: -1032px 0; } }
+#vq-charge-texte { margin-top: 10px; text-align: center; color: #ffe3ec; font: 600 15px/1 sans-serif; letter-spacing: .5px; }
 		</style>
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
@@ -111,6 +120,21 @@ body {
 		<div id="status">
 			<img id="status-splash" style="display:none" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
 			<progress id="status-progress"></progress>
+			<div id="vq-charge"><div style="position:relative"><div id="vq-charge-piste"><div id="vq-charge-plein"></div></div><div id="vq-peggy"></div></div><div id="vq-charge-texte">Chargement…</div></div>
+			<script>
+			(function () {
+				var p = document.getElementById('status-progress'), boite = document.getElementById('vq-charge');
+				var plein = document.getElementById('vq-charge-plein'), peggy = document.getElementById('vq-peggy');
+				var vu = 0, t = setInterval(function () {
+					if (!document.body.contains(p)) { clearInterval(t); return; }
+					boite.style.display = p.style.display === 'block' ? 'block' : 'none';
+					var v = p.hasAttribute('value') && p.max ? p.value / p.max : vu + (0.9 - vu) * 0.01;
+					vu = Math.max(vu, Math.min(1, v));
+					var pc = (vu * 100).toFixed(1) + '%';
+					plein.style.width = pc; peggy.style.left = pc;
+				}, 100);
+			})();
+			</script>
 			<div id="status-notice"></div>
 			<div id="vq-version" style="position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.55);font:13px/1 sans-serif;pointer-events:none"></div>
 		</div>
@@ -141,7 +165,7 @@ body {
   })();
   // Numéro de version (Alpha 0.1.x…) : monté tout seul par maj_web_appli.sh à chaque publication.
   // Au lancement, on demande au site le dernier numéro ; si ce téléphone a une page plus ancienne, on recharge la nouvelle (une fois).
-  const VERSION_APPLI = "Alpha 0.1.30";
+  const VERSION_APPLI = "Alpha 0.1.31";
   window.VQ_VERSION = VERSION_APPLI;
   (function () {
     const e = document.getElementById('vq-version'); if (e) e.textContent = VERSION_APPLI;
