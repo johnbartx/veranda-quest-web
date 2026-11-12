@@ -193,6 +193,7 @@ function lacherJoy(){JOY.doigt=-1;JOY.dx=JOY.dy=0;JOY.x=JOY.hx;JOY.y=JOY.hy;JOY.
 cv.addEventListener('pointerdown',e=>{e.preventDefault();const [x,y]=cxy(e);
  if(S.mode==='pause'){if(y<H*.5){S.mode='play';if(music)music.play().catch(()=>{});}else begin();return;}
  if(S.mode==='play'&&x>W*.85&&y<HUDH*.75){S.mode='pause';if(music)music.pause();lacherJoy();return;}
+ if(S.mode==='win'&&APPLI_SUITE){if(S.overT>1.2){const r=btnRects();if(dansBtn(x,y,r.suiv)){niveauSuivant();return;}if(dansBtn(x,y,r.rej)){audio();begin();return;}}return;}
  if(start())return;
  if(btnDoigt<0&&Math.hypot(x-BTN.x,y-BTN.y)<BTN.r*1.25){btnDoigt=e.pointerId;jump();return;}
  // double tap = SUPER MAYO
@@ -421,6 +422,11 @@ function cadreRegles(titre,lignes){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,
  for(const li of lignes){const L=lignesCoupees(li,lc-70);const y0=y+23-(L.length-1)*10;L.forEach((t,i)=>g.fillText(t,W/2,y0+i*20));y+=46;}
  g.globalAlpha=.35+.65*(.5+.5*Math.cos(S.t*Math.PI));g.font='20px '+LIL;g.fillStyle='#a8401f';g.fillText('TOUCHE POUR JOUER',W/2,y+3+13);g.globalAlpha=1;
  g.textBaseline='alphabetic';g.restore();}
+// NIVEAU SUIVANT (règle John 12/11 : après une victoire on enchaîne ciné + niveau suivant, le menu seulement sur demande)
+const APPLI_SUITE=/[?&](e|p)=/.test(location.search);
+function btnRects(){const ph=Math.max(H*.6,390*U),py=H*.1,y=Math.min(py+ph+18*U,H-60*U);return {suiv:{y,w:220*U},rej:{y:y+92*U,w:150*U}};}
+function dansBtn(x,y,b){const h=b.w*172/360;return Math.abs(x-W/2)<b.w*.46&&Math.abs(y-b.y)<h*.32;}
+function niveauSuivant(){if(!finEnvoyee)finPartie('gagne');try{localStorage.setItem('vq_suite','1')}catch(e){}location.href='index.html';}
 function panel(title,lines,btn,hero){g.fillStyle='rgba(0,0,0,.4)';g.fillRect(0,0,W,H);
  const pw=W*.88,ph=Math.max(H*.6,390*U),px=(W-pw)/2,py=H*.1;panneau(px,py,pw,ph);
  encre(title,W/2,py+42*U,title.length>16?26*U:30*U,'#ffd34a');
@@ -558,7 +564,8 @@ function draw(){
  if(S.mode==='title')cadreRegles('BAGARRE AU BIG DOUBS',['Joystick : bouge, le tir est auto','SAUTE par-dessus les plats','Sous le PLAT ROUGE : renvoie-le !','MAYO de la serveuse : double appui','Touché : ½ étoile en moins','100 pièces = 1 étoile en plus']);
  if(S.mode==='pause'){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,W,H);encre('PAUSE',W/2,H*.2,44*U,'#ffd34a');panneau(W*.15,H*.3,W*.7,H*.15);encre('REPRENDRE',W/2,H*.375,26*U,'#2a1a0e','center','#f1dfb6');panneau(W*.15,H*.55,W*.7,H*.15);encre('RECOMMENCER',W/2,H*.625,26*U,'#2a1a0e','center','#f1dfb6');}
  if(S.mode==='over')panel('TU ES VIRÉ !',[{t:'Le chef t\'a mis à la porte.',b:0},{t:'Mathieu finit ton assiette.',b:0},{t:'',b:0},{t:'SCORE',b:0},{t:String(S.score),b:1,c:'#6b1f1a'},{t:S.newBest?'NOUVEAU RECORD !':('Record : '+best),b:0,c:'#8a5a2b'}],S.overT>1.2?'REJOUER':null,y=>{img('Je6',W/2,y+168,.42);});
- if(S.mode==='win')panel('BIEN JOUÉ !',[{t:'Le chef jette l\'éponge',b:0},{t:'et te sert enfin ton burger.',b:0},{t:'',b:0},{t:'SCORE',b:0},{t:String(S.score),b:1,c:'#6b1f1a'},{t:'Plats rouges relancés : '+S.parries,b:0},{t:S.newBest?'NOUVEAU RECORD !':('Record : '+best),b:0,c:'#8a5a2b'}],S.overT>1.2?'REJOUER':null,y=>{img('K_vi2',W/2,y+176,.5);});
+ if(S.mode==='win')panel('BIEN JOUÉ !',[{t:'Le chef jette l\'éponge',b:0},{t:'et te sert enfin ton burger.',b:0},{t:'',b:0},{t:'SCORE',b:0},{t:String(S.score),b:1,c:'#6b1f1a'},{t:'Plats rouges relancés : '+S.parries,b:0},{t:S.newBest?'NOUVEAU RECORD !':('Record : '+best),b:0,c:'#8a5a2b'}],S.overT>1.2?(APPLI_SUITE?'NIVEAU SUIVANT':'REJOUER'):null,y=>{img('K_vi2',W/2,y+176,.5);});
+ if(S.mode==='win'&&APPLI_SUITE&&S.overT>1.2){const r=btnRects();plaqueBtn('REJOUER',W/2,r.rej.y,r.rej.w);}
 }
 let last=performance.now();
 let warm=false;
