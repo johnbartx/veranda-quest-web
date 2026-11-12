@@ -142,10 +142,16 @@ body {
 
 		<script>
   // Diagnostic (09/11, temporaire) : les erreurs et les étapes du démarrage s'affichent en bas de l'écran.
+  // Seulement pendant le démarrage : une fois le jeu lancé, plus rien ne s'affiche (bug signalé par John 12/11).
   (function () {
     const lignes = [];
     let erreur = false;
+    let fini = false;
     function noter(t) {
+      if (fini) return;
+      if (/^moteur démarré/.test(String(t))) {
+        setTimeout(() => { fini = true; const d = document.getElementById('vq-diag'); if (d) d.remove(); }, 8000);
+      }
       if (/^(ERR|JS|PROMESSE|erreur)/.test(String(t))) erreur = true;
       lignes.push(String(t).slice(0, 160)); if (lignes.length > 8) lignes.shift();
       if (!erreur) return; // n'apparaît qu'en cas d'erreur
