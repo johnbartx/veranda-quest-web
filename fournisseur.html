@@ -98,8 +98,23 @@ let etoiles=3,pieces=0,commande=0,score=0,scroll=0,vagueT=0,vagueN=0,secousse=0,
 const OBJ_COMMANDE=12,TYPES_PIECE=['vitre','tuile','vis','silicone','poutre','chassis'],SPR_PIECE={vitre:'o1',tuile:'o2',vis:'o3',silicone:'o4',poutre:'o5',chassis:'o6'};
 function LIM(){return HUDH+CH*.14;}
 function ymaxJ(){return CH-BAS-62*U;}
-function nouvellePartie(){J={x:CW/2,y:ymaxJ()-30*U,vx:0,inv:0,feu:0,penche:0,hit:0,triple:false,fum:0,fumN:0,chauffe:0,panne:0,pet:0,tubes:1};SUPER=[];dernierAppui={t:-9,x:0,y:0};tirs=[];balles=[];ennemis=[];objets=[];parts=[];textes=[];bulles=[];dangers=[];
- etoiles=3;pieces=0;commande=0;score=0;vagueT=1.5;vagueN=0;boss=null;premiereBalle=false;guideT=6;finT=0;ralenti=1;ralentiT=0;dejaMort=false;
+const ENTREE_E=(()=>{const m=location.search.match(/[?&]e=([0-9.]+)/);const v=m?+m[1]:3;return Math.max(.5,Math.min(5,Math.round(v*2)/2||3));})();
+const ENTREE_P=(()=>{const m=location.search.match(/[?&]p=(\d+)/);return m?Math.min(999999,+m[1]):0;})();
+// fin de partie (appli) : étoiles + TOTAL des pièces rendus au menu (vq_n7_fin) ; statistiques Supabase si le joueur a un compte
+let debutT=0,finEnvoyee=true;
+function rendreEntree(){try{localStorage.setItem('vq_n7_fin',JSON.stringify({gagne:false,score:0,etoiles:ENTREE_E,pieces:ENTREE_P,t:Date.now()}));}catch(e){}}
+function finPartie(res){if(finEnvoyee)return;finEnvoyee=true;
+ if(res==='quitte')rendreEntree();else try{localStorage.setItem('vq_n7_fin',JSON.stringify({gagne:res==='gagne',score:score|0,etoiles:res==='vire'?0:etoiles,pieces:pieces,t:Date.now()}));}catch(e){}
+ try{const j=JSON.parse(localStorage.getItem('vq_joueur')||'{}');if(j.jeton&&j.supabase&&j.cle)fetch(String(j.supabase).replace(/\/+$/,'')+'/rest/v1/parties',{method:'POST',keepalive:true,headers:{apikey:j.cle,Authorization:'Bearer '+j.jeton,'Content-Type':'application/json',Prefer:'return=minimal'},
+  body:JSON.stringify({niveau:j.niveau||'monde1-fournisseur',resultat:res,pieces:Math.max(0,pieces-ENTREE_P),etoiles:res==='vire'?0:etoiles,duree:Math.round(tReel-debutT),version:j.version||''})}).catch(()=>{});}catch(e){}}
+function quitterVersMenu(){if(!finEnvoyee)finPartie('quitte');else if(etat==='regles')rendreEntree();}
+addEventListener('pagehide',()=>{if(!finEnvoyee)finPartie('quitte');});
+// 150 pièces à ramasser par partie (règle John 12/11), étalées : caisses, pluies de pièces pendant les vagues, or de Gégé
+let PIECES_DISPO=0,pluieT=5;
+function nouvellePiece(x,y,vx,vy){PIECES_DISPO++;objets.push({type:'piece',x,y,vx,vy,t:0});}
+function pluiePieces(){const n=5,arc=Math.random()<.5,x0=R(.15,.35),l=R(.3,.5);for(let i=0;i<n;i++){const f=i/(n-1);nouvellePiece(CW*(x0+l*f),LIM()+10*U-(arc?Math.sin(Math.PI*f)*40*U:f*30*U),0,40*U);}}
+function nouvellePartie(){if(!finEnvoyee)finPartie('quitte');finEnvoyee=false;debutT=tReel;J={x:CW/2,y:ymaxJ()-30*U,vx:0,inv:0,feu:0,penche:0,hit:0,triple:false,fum:0,fumN:0,chauffe:0,panne:0,pet:0,tubes:1};SUPER=[];dernierAppui={t:-9,x:0,y:0};tirs=[];balles=[];ennemis=[];objets=[];parts=[];textes=[];bulles=[];dangers=[];
+ etoiles=ENTREE_E;pieces=ENTREE_P;PIECES_DISPO=0;pluieT=5;commande=0;score=0;vagueT=1.5;vagueN=0;boss=null;premiereBalle=false;guideT=6;finT=0;ralenti=1;ralentiT=0;dejaMort=false;
  if(/boss/.test(location.search)){commande=OBJ_COMMANDE;}
  banniere(TX('LE FOURNISSEUR !'),2.2);INTRO=/boss/.test(location.search)?null:{t:0,x:CW/2,y:-200*U,dit:0};}
 let BAN=null,BLANC=0;const ANCIEN=/ancien/.test(location.search);let calmeT=0;function banniere(t,d){BAN={t,d,t0:d};}
@@ -146,13 +161,13 @@ function bossTir(){S.poc();boss.lanceA=.6;const b=boss,x=b.x,y=b.y+95*U;
  if(b.phase===1){const tx=b.x-68*U,ty=b.y-62*U,a=viser(tx,ty);b.n1=(b.n1||0)+1;if(b.n1%2){for(let k=-2;k<=2;k++)balle(tx,ty,a+k*.26,135,'tuile',{tuile:true,rot:0});b.lance=.3;}else{for(let r=0;r<4;r++)setTimeout(()=>{if(boss&&!boss.mort&&boss.phase===1)for(const s of [-1,1])balle(boss.x+s*44*U,boss.y+95*U,viser(boss.x+s*44*U,boss.y+95*U),165,'rose');},r*140);}b.feu=1.25;b.sqT=.25;if(b.n1%3===1){S.rire();}if(b.n1%3===1)bulle('gege',[TX('Cadeau ! C\'est offert !'),TX('Tuile gratuite !'),TX('Attrape, c\'est du premier choix !')][Math.random()*3|0],1.4);}
  else if(b.phase===2){const n=12;b.tourne+=.26;for(let k=0;k<n;k++)balle(x,y,b.tourne+k*Math.PI*2/n,95,'vitre',{vitre:true,rot:k});b.feu=1.55;const a=viser(x,y);for(let k=-1;k<=1;k++)balle(x,y,a+k*.2,150,'rose');}
  else {b.tourne+=.33;for(let k=0;k<3;k++){const a=b.tourne+k*Math.PI*2/3;balle(x,y,a,105,'violet');balle(x,y,-a*1.1,85,'rose');}b.feu=.24;b.spi=(b.spi||0)+1;if(b.spi%9===0){const a=viser(x,y);balle(x,y,a,150,'tuile',{tuile:true,rot:0});}}}
-function bossTouche(d){const b=boss;if(!b||b.entree||b.mort)return;b.pv-=d;b.flash=.08;b.recul=Math.min(10*U,(b.recul||0)+1.2*U);score+=10;
+function bossTouche(d){const b=boss;if(!b||b.entree||b.mort)return;b.pv-=d;b.flash=.08;b.orD=(b.orD||0)+d;while(b.orD>=70){b.orD-=70;nouvellePiece(b.x+R(-50,50)*U,b.y+60*U,R(-80,80)*U,R(-120,-40)*U);}b.recul=Math.min(10*U,(b.recul||0)+1.2*U);score+=10;
  const seuil=b.phase===1?BOSS_PV*2/3:b.phase===2?BOSS_PV/3:0;
- if(b.pv<=seuil){if(b.phase<3){b.phase++;b.tour=.9;b.dash=0;b.dashT=3;b.aie=1.2;secousse=.5;S.splatch();texte(b.x,b.y,TX('SPLATCH !'),'#ffd34a',44);for(let i=0;i<20;i++)parts.push(eclat(b.x+R(-60,60)*U,b.y+R(-40,40)*U,'#fff'));for(let i=0;i<3;i++)parts.push(anim('explo',b.x+R(-70,70)*U,b.y+R(-80,80)*U,130*U,.5));
+ if(b.pv<=seuil){if(b.phase<3){for(let i=0;i<10;i++)nouvellePiece(b.x+R(-60,60)*U,b.y+40*U,R(-140,140)*U,R(-200,-60)*U);b.phase++;b.tour=.9;b.dash=0;b.dashT=3;b.aie=1.2;secousse=.5;S.splatch();texte(b.x,b.y,TX('SPLATCH !'),'#ffd34a',44);for(let i=0;i<20;i++)parts.push(eclat(b.x+R(-60,60)*U,b.y+R(-40,40)*U,'#fff'));for(let i=0;i<3;i++)parts.push(anim('explo',b.x+R(-70,70)*U,b.y+R(-80,80)*U,130*U,.5));
   balles=[];bulle('gege',b.phase===2?TX('Mes tuiles ! Bon... les BOULONS !'):TX('Mes boulons !! Plein gaz… le plein, c\'était pas compris ?!'),2.6);banniere(b.phase===2?TX('PHASE 2 : LES BOULONS'):TX('PHASE 3 : PLEIN GAZ'),1.8);b.feu=2;}
   else bossMort();}
  else if(Math.random()<.015){b.aie=.35;if(Math.random()<.35)bulle('gege',[TX('Aïe !'),TX('Ma peinture !'),TX('Mon chariot tout neuf !'),TX('Hé ho ! Pas le gyrophare !'),TX('Ma prime !!')][Math.random()*5|0],1.2);}}
-function bossMort(){gag('rire',true);const b=boss;b.mort=true;b.mortT=0;balles=[];S.boum();secousse=1.2;banniere(TX('BADABOUM !'),2);setTimeout(()=>S.trombone(),700);bulle('gege',TX('Bon... je te fais une remise ?!'),3);score+=5000;}
+function bossMort(){gag('rire',true);const b=boss;b.mort=true;b.mortT=0;for(let i=0;i<15;i++)nouvellePiece(b.x+R(-70,70)*U,b.y+40*U,R(-160,160)*U,R(-220,-60)*U);balles=[];S.boum();secousse=1.2;banniere(TX('BADABOUM !'),2);setTimeout(()=>S.trombone(),700);bulle('gege',TX('Bon... je te fais une remise ?!'),3);score+=5000;}
 
 // ---------- particules ----------
 const ANIMS={traine:['f1','f2','f3','f4'],noire:['f5','f6','f7','f8'],explo:['f9','f10','f11','f12'],splatch:['o11'],pouf:['o12','f3','f4']};
@@ -270,7 +285,7 @@ function maj(dtR){tReel+=dtR;if(tirSon>0)tirSon-=dtR;if(tokSon>0)tokSon-=dtR;if(
    if(I.y<-260*U){INTRO=null;gag('langue');}}
   if(INTRO&&INTRO.t<3.3)vagueT=Math.max(vagueT,.5);}
  if(!INTRO){glaceT-=dt;if(glaceT<=0){glaceT=boss?R(7,10):R(13,19);objets.push({type:'glace',para:1,x:R(.15,.85)*CW,y:LIM()+10*U,vx:0,vy:40*U,t:0});}}
- if(!boss){vagueT-=dt;if(vagueT<=0)lancerVague();if(commande>=OBJ_COMMANDE&&ennemis.length===0)lancerBoss();else if(commande>=OBJ_COMMANDE){vagueT=99;}}
+ if(!boss){vagueT-=dt;if(vagueT<=0)lancerVague();if(!boss&&commande<OBJ_COMMANDE){pluieT-=dt;if(pluieT<=0){pluieT=8;pluiePieces();}}if(commande>=OBJ_COMMANDE&&ennemis.length===0)lancerBoss();else if(commande>=OBJ_COMMANDE){vagueT=99;}}
  // ennemis
  for(const e of ennemis){e.t+=dt;if(e.flash>0)e.flash-=dt;if(e.sq>0)e.sq-=dt;if(e.bulle){e.bulle.d-=dt;if(e.bulle.d<=0)e.bulle=null;}
   if(e.hurt>0)e.hurt-=dt;
@@ -286,7 +301,7 @@ function maj(dtR){tReel+=dtR;if(tirSon>0)tirSon-=dtR;if(tokSon>0)tokSon-=dtR;if(
    // seules les CAISSES contiennent quelque chose : 1 élément de commande + un peu d'or
    if(!DEF[e.type].caisse&&Math.random()<.25)objets.push({type:'glace',x:e.x,y:e.y,vx:R(-20,20)*U,vy:-80*U,t:0});
    if(DEF[e.type].caisse&&Math.random()<.2&&J.tubes<3)objets.push({type:'tube',x:e.x,y:e.y,vx:R(-30,30)*U,vy:-140*U,t:0});
-   if(DEF[e.type].caisse){const nb=e.type==='carton'?3:2;for(let i=0;i<nb;i++)objets.push({type:'piece',x:e.x+R(-20,20)*U,y:e.y,vx:R(-60,60)*U,vy:R(-160,-60)*U,t:0});
+   if(DEF[e.type].caisse){const nb=e.type==='carton'?5:4;for(let i=0;i<nb;i++)nouvellePiece(e.x+R(-24,24)*U,e.y,R(-70,70)*U,R(-170,-60)*U);
     if(commande<OBJ_COMMANDE){objets.push({type:'cmd',k:TYPES_PIECE[Math.random()*TYPES_PIECE.length|0],x:e.x,y:e.y,vx:R(-30,30)*U,vy:-120*U,t:0});texte(e.x,e.y-58*U,TX('CAISSE OUVERTE !'),'#bdf0ff',20);}}
    if(e.type==='mouette'&&Math.random()<.5)texte(e.x,e.y+10*U,TX('CUI ?!'),'#fff',22);}
   // collision avec l'avion
@@ -310,7 +325,7 @@ function maj(dtR){tReel+=dtR;if(tirSon>0)tirSon-=dtR;if(tokSon>0)tokSon-=dtR;if(
    if(Math.abs(b.x-J.x)<68*U&&Math.abs(b.y-J.y)<94*U)toucheJohn();}
   else{b.mortT+=dt;b.x+=Math.sin(b.mortT*30)*3*U;if(Math.random()<dt*9)parts.push(anim(Math.random()<.5?'explo':'noire',b.x+R(-90,90)*U,b.y+R(-110,110)*U,R(90,150)*U,.6));if(b.mortT>1.4){b.y+=b.mortT*b.mortT*90*U*dt;}
    if(!b.plan&&b.mortT>1){b.plan=1;objets.push({type:'plan',x:b.x,y:b.y,vx:0,vy:-80*U,t:0});bulle('gege',TX('Non ! Pas le PLAN du fournisseur !'),2.4);}
-   if(((b.gagne&&b.mortT>b.gagne)||b.mortT>9)&&etat==='jeu'){etat='gagne';finT=0;try{localStorage.setItem('vq_n7_fin',JSON.stringify({gagne:true,etoiles:etoiles,pieces:pieces%100,score:score|0,t:Date.now()}));}catch(e){}try{const r=+(localStorage.getItem('vq_n7_gagne')||0);localStorage.setItem('vq_n7_gagne',Math.max(r,score|0,1));localStorage.setItem('vq_n7_partie',Date.now());}catch(e){}finAt=tReel;moteurOn(false);S.fanfare();}}}
+   if(((b.gagne&&b.mortT>b.gagne)||b.mortT>9)&&etat==='jeu'){etat='gagne';finT=0;try{const r=+(localStorage.getItem('vq_n7_gagne')||0);localStorage.setItem('vq_n7_gagne',Math.max(r,score|0,1));localStorage.setItem('vq_n7_partie',Date.now());}catch(e){}finPartie('gagne');finAt=tReel;moteurOn(false);S.fanfare();}}}
  // balles ennemies
  for(const b of balles){b.t+=dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.rot!==undefined)b.rot+=dt*5;
   if(!premiereBalle&&b.y>HUDH+10){premiereBalle=true;ralentiT=1.4;b.premiere=true;}
@@ -336,7 +351,7 @@ function maj(dtR){tReel+=dtR;if(tirSon>0)tirSon-=dtR;if(tokSon>0)tokSon-=dtR;if(
 const AIE=[TX('Aïe, ma verrière !'),TX('Mon devis !!'),TX('Pas la carrosserie !'),TX('Ouille, ça pique !'),TX('Je vais le dire à Séb !'),TX('Mon brushing !')];
 function toucheJohn(){if(J.inv>0||etat!=='jeu')return;gag('aie',true);etoiles-=.5;J.inv=2;J.hit=.4;secousse=.35;S.aie();texte(J.x,J.y-40*U,TX('BOBO !'),'#ff8fb8',30);bulle('john',AIE[Math.random()*AIE.length|0],1.6);
  for(let i=0;i<8;i++)parts.push(eclat(J.x,J.y,'#cfd6dc'));parts.push(anim('explo',J.x+R(-20,20)*U,J.y-10*U,70*U,.35));
- if(etoiles<=0){etoiles=0;FIN_VIRE=null;etat='vire';finAt=tReel;try{localStorage.setItem('vq_n7_fin',JSON.stringify({gagne:false,etoiles:etoiles,pieces:pieces%100,score:score|0,t:Date.now()}));}catch(e){}moteurOn(false);setTimeout(()=>S.trombone(),300);finT=0;if(musique)musique.pause();bip('sine',300,80,1,.12);}}
+ if(etoiles<=0){etoiles=0;FIN_VIRE=null;etat='vire';finAt=tReel;finPartie('vire');moteurOn(false);setTimeout(()=>S.trombone(),300);finT=0;if(musique)musique.pause();bip('sine',300,80,1,.12);}}
 
 // ---------- dessin ----------
 function img(n,x,y,w,a,sx,sy){const i=IMG[n];if(!i||!i.complete)return;const h=w*i.height/i.width;cx.save();cx.translate(x,y);if(a)cx.rotate(a);cx.scale(sx||1,sy||1);cx.drawImage(i,-w/2,-h/2,w,h);cx.restore();}
@@ -543,7 +558,7 @@ resize();requestAnimationFrame(boucle);
 window.__vq={get etat(){return etat},set commande(v){commande=v},get boss(){return boss},get fps(){return FPS},get etoiles(){return etoiles},set etoiles(v){etoiles=v},
  demarrer(){audio();nouvellePartie();etat='jeu';},versBoss(){commande=OBJ_COMMANDE;ennemis=[];},phase(p){if(boss){boss.pv=BOSS_PV*(3-p+1)/3-1;boss.phase=p;}},
  tuerBoss(){if(boss){boss.pv=1;boss.phase=3;bossTouche(5);}},vire(){etoiles=.5;J.inv=0;toucheJohn();}};
-</script><a id="retour-menu" href="index.html" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));z-index:10;display:none;padding:8px 16px;border-radius:14px;background:#7a4a22;border:3px solid #3b2416;color:#fff1c9;font:22px 'Luckiest Guy',sans-serif;text-decoration:none;box-shadow:0 3px 0 #3b2416">◀ MENU</a>
+</script><a id="retour-menu" href="index.html" onclick="try{quitterVersMenu()}catch(e){}" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));z-index:10;display:none;padding:8px 16px;border-radius:14px;background:#7a4a22;border:3px solid #3b2416;color:#fff1c9;font:22px 'Luckiest Guy',sans-serif;text-decoration:none;box-shadow:0 3px 0 #3b2416">◀ MENU</a>
 <script>setInterval(function(){var e=typeof etat!=='undefined'?etat:'';document.getElementById('retour-menu').style.display=(e==='regles'||e==='pause'||e==='vire'||e==='gagne')?'block':'none';},250);</script>
 <script>document.getElementById('retour-menu').textContent=TX('◀ MENU');</script>
 </body></html>
