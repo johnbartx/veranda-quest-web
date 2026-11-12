@@ -173,12 +173,14 @@ function jump(){const j=S.john;if(S.mode!=='play'||S.sup||j.hit>0)return;
 function superMayo(){if(S.mode!=='play'||S.sup||S.mayo<=0||S.john.hit>0||S.trans>0)return;S.mayo--;S.sup={t:0};bubble(S.john.x,S.john.y-200,'SUPER MAYO !','#ffe066',1.5);sfx.parry();}
 let lastTap={t:0,x:0,y:0};
 function begin(){reset();debutT=performance.now();finEnvoyee=false;lacherJoy();S.mode='play';card('t-table',1.8);sfx.roar();}
-// INTRO (cinématique N3) : au 1er toucher de l'écran titre, la vidéo se joue (bruitages seuls), la musique du niveau démarre en même temps et continue dans le jeu sans coupure. ?intro=0 la saute.
+// INTRO (cinématique N3) — bouton PASSER seulement à partir du 2e visionnage (clé localStorage vq_vue_n3, posée à la fin de la vidéo) : au 1er toucher de l'écran titre, la vidéo se joue (bruitages seuls), la musique du niveau démarre en même temps et continue dans le jeu sans coupure. ?intro=0 la saute.
 let introVue=/[?&]intro=0/.test(location.search)?1:0,introEnCours=0;
-function finIntro(){if(!introEnCours)return;introEnCours=0;const v=document.getElementById('introv');try{v.pause()}catch(e){}document.getElementById('intro').style.display='none';}
+function finIntro(){if(!introEnCours)return;introEnCours=0;try{localStorage.setItem('vq_vue_n3','1')}catch(e){}const v=document.getElementById('introv');try{v.pause()}catch(e){}document.getElementById('intro').style.display='none';}
 function jouerIntro(){const box=document.getElementById('intro'),v=document.getElementById('introv');introVue=1;
  if(!v||v.error){return false;}introEnCours=1;box.style.display='flex';lacherJoy();
- v.onended=finIntro;v.onerror=finIntro;document.getElementById('passer').onclick=e=>{e.stopPropagation();finIntro();};
+ let dejaVue=false;try{dejaVue=!!localStorage.getItem('vq_vue_n3')}catch(e){}
+ const bp=document.getElementById('passer');bp.style.display=dejaVue?'block':'none';
+ v.onended=finIntro;v.onerror=finIntro;bp.onclick=e=>{e.stopPropagation();if(dejaVue)finIntro();};
  try{v.currentTime=0;v.volume=1;const p=v.play();if(p&&p.catch)p.catch(()=>finIntro());}catch(e){finIntro();}
  if(music){try{music.currentTime=0}catch(e){}}return true;}
 function start(){audio();if(introEnCours)return true;if(S.mode==='title'&&!introVue&&jouerIntro())return true;if(S.mode==='title'){begin();return true;}
