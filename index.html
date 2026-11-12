@@ -186,6 +186,14 @@ body {
       location.replace(u.toString());
     }).catch(() => {});
   })();
+  // Mémoire du jeu (parties, code ami) : on demande au téléphone de la garder pour de bon (fil Bugs 12/11 :
+  // l'iPhone de John a tout vidé après une mise à jour). Le résultat est lu par le diagnostic de MES POTES.
+  window.vqMemoire = '?';
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then((ok) => { window.vqMemoire = ok ? 'gardée' : 'non garantie'; }).catch(() => { window.vqMemoire = 'erreur'; });
+    } else { window.vqMemoire = 'pas dispo'; }
+  } catch (e) { window.vqMemoire = 'erreur'; }
   // Plus de service worker (il gardait d'anciennes versions sur l'iPhone) : on retire ceux qui restent.
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(async (regs) => {
