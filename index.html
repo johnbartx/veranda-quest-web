@@ -202,8 +202,8 @@ body {
     }).catch(() => {});
   }
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
-  const MORCEAUX_PCK = ["index.pck.b66825769.part0","index.pck.b66825769.part1","index.pck.b66825769.part2","index.pck.b66825769.part3","index.pck.b66825769.part4","index.pck.b66825769.part5","index.pck.b66825769.part6","index.pck.b66825769.part7"];
-  const TAILLE_PCK = 301119816; // remplacé à chaque publication
+  const MORCEAUX_PCK = ["index.pck.b4928372.part0","index.pck.b4928372.part1","index.pck.b4928372.part2","index.pck.b4928372.part3","index.pck.b4928372.part4","index.pck.b4928372.part5","index.pck.b4928372.part6","index.pck.b4928372.part7"];
+  const TAILLE_PCK = 301121080; // remplacé à chaque publication
   const fetchOrigine = window.fetch.bind(window);
   // Si un morceau manque (ancienne page gardée en mémoire par l'iPhone), on vide la mémoire de l'appli et on recharge, une fois.
   async function reparer() {
@@ -248,7 +248,7 @@ body {
 </script>
 <script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":301119816,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":301121080,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
