@@ -224,6 +224,9 @@ body {
   const cacheJeu = (async () => {
     try {
       if (!('caches' in window)) return null;
+      // iPhone moins puissants (écran 2 points : XR, 11, SE…) : peu de mémoire, on ne tente rien de plus chez eux,
+      // le jeu se charge par le réseau comme avant (prudence après les fermetures de page chez Lucie, 14/11).
+      if (/iPhone|iPod/i.test(navigator.userAgent || '') && (window.devicePixelRatio || 1) <= 2.01) return null;
       const c = await caches.open(CACHE_JEU);
       const bons = new Set(MORCEAUX_PCK);
       let otes = 0;
