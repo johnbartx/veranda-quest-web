@@ -132,7 +132,7 @@ body {
 					vu = Math.max(vu, Math.min(1, v));
 					var pc = (vu * 100).toFixed(1) + '%';
 					plein.style.width = pc; peggy.style.left = pc;
-					texte.textContent = 'Chargement… ' + Math.floor(vu * 100) + ' %';
+					texte.textContent = window.vqAttente || ('Chargement… ' + Math.floor(vu * 100) + ' %');
 				}, 100);
 			})();
 			</script>
@@ -267,25 +267,45 @@ body {
         try { await c.delete(cleJeu(nom, 'fin')); } catch (x) {}
       }
     }
-    const r = await fetchOrigine(nom);
-    if (!r.ok) throw new Error('morceau ' + nom);
-    etatJeu.reseau++;
-    const lecteur = r.body.getReader();
-    // (si la mémoire a lâché en cours de morceau, on saute les octets déjà donnés au jeu et on ne range pas cette fois)
-    let saute = deja, ranger = !!c && deja === 0, bouts = [], taille = 0, i = 0;
+    // Réseau (fil Bugs 14/11 : John bloqué à 17 % en 4G, « Load failed ») : si la connexion lâche ou se fige en plein
+    // morceau, on attend et on reprend tout seul là où on en était, au lieu de rester bloqué.
+    let donnes = deja, ranger = !!c && deja === 0, bouts = [], taille = 0, i = 0, essais = 0, compte = false;
     for (;;) {
-      const { done, value } = await lecteur.read();
-      if (done) break;
-      let v = value;
-      if (saute > 0) {
-        if (v.length <= saute) { saute -= v.length; continue; }
-        v = v.subarray(saute); saute = 0;
+      let lecteur = null;
+      try {
+        const r = await fetchOrigine(nom, donnes ? { headers: { Range: 'bytes=' + donnes + '-' } } : undefined);
+        if (r.status === 404) throw new Error('morceau ' + nom);
+        if (!r.ok) throw new Error('réponse ' + r.status);
+        if (!compte) { etatJeu.reseau++; compte = true; }
+        lecteur = r.body.getReader();
+        // (si le serveur renvoie tout le morceau au lieu de la suite, on saute les octets déjà donnés au jeu)
+        let saute = r.status === 206 ? 0 : donnes;
+        for (;;) {
+          let minuteur = 0;
+          const { done, value } = await Promise.race([lecteur.read(),
+            new Promise((_, non) => { minuteur = setTimeout(() => non(new Error('réseau figé')), 25000); })]).finally(() => clearTimeout(minuteur));
+          if (done) break;
+          let v = value;
+          if (saute > 0) {
+            if (v.length <= saute) { saute -= v.length; continue; }
+            v = v.subarray(saute); saute = 0;
+          }
+          if (ranger) {
+            bouts.push(v); taille += v.length;
+            if (taille >= TRANCHE) { ranger = await rangerTranche(c, cleJeu(nom, i++), bouts); bouts = []; taille = 0; }
+          }
+          donnes += v.length; essais = 0;
+          if (window.vqAttente) window.vqAttente = '';
+          yield v;
+        }
+        break;
+      } catch (e) {
+        try { if (lecteur) lecteur.cancel().catch(() => {}); } catch (x) {}
+        if (String(e && e.message).startsWith('morceau') || ++essais > 60) { window.vqAttente = ''; throw e; }
+        if (window.vqNoter) vqNoter('réseau coupé (' + (e && e.message) + '), nouvel essai ' + essais);
+        window.vqAttente = 'Pas de réseau… je réessaie tout seul';
+        await new Promise((ok) => setTimeout(ok, Math.min(5000, 1000 * essais)));
       }
-      if (ranger) {
-        bouts.push(v); taille += v.length;
-        if (taille >= TRANCHE) { ranger = await rangerTranche(c, cleJeu(nom, i++), bouts); bouts = []; taille = 0; }
-      }
-      yield v;
     }
     if (ranger && taille > 0) ranger = await rangerTranche(c, cleJeu(nom, i++), bouts);
     if (ranger) { try { await c.put(cleJeu(nom, 'fin'), new Response(String(i))); } catch (e) {} }
@@ -317,6 +337,7 @@ body {
           }
         } catch (e) {
           if (window.vqNoter) vqNoter('erreur morceau ' + (e && e.message));
+          window.vqAttente = 'Pas de réseau. Ferme le jeu et rouvre-le.';
           ctrl.error(e);
           if (String(e && e.message).startsWith('morceau')) reparer();
         }
