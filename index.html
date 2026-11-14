@@ -198,7 +198,7 @@ body {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(async (regs) => {
       for (const r of regs) await r.unregister();
-      try { for (const k of await caches.keys()) if (k !== 'vq-jeu-v1') await caches.delete(k); } catch (e) {}
+      try { for (const k of await caches.keys()) await caches.delete(k); } catch (e) {}
     }).catch(() => {});
   }
   // Le paquet du jeu est publié en morceaux (limite de 100 Mo par fichier sur GitHub) : on les recolle ici.
@@ -212,81 +212,6 @@ body {
     try { for (const k of await caches.keys()) await caches.delete(k); } catch (e) {}
     location.reload();
   }
-  // MÉMOIRE DU JEU (fil Bugs 13/11, demande John : « si la version n'a pas changé, pourquoi le téléphone recharge le jeu ? »).
-  // L'iPhone ne garde pas tout seul des fichiers aussi gros : chaque ouverture retéléchargeait les 300 Mo.
-  // Au premier lancement, chaque morceau du paquet est rangé dans la mémoire du téléphone (Cache Storage), par
-  // tranches de 8 Mo ; aux lancements suivants il est relu de là, sans réseau. Le nom d'un morceau contient
-  // l'empreinte de sa version : une ancienne version ne peut pas être resservie, et ses morceaux sont effacés.
-  // Au moindre souci (mémoire pleine, tranche illisible), on repasse par le réseau comme avant.
-  const CACHE_JEU = 'vq-jeu-v1', TRANCHE = 8 * 1024 * 1024;
-  const cleJeu = (nom, quoi) => 'vq-memoire/' + nom + '/' + quoi;
-  const etatJeu = { garde: 0, reseau: 0 };
-  const cacheJeu = (async () => {
-    try {
-      if (!('caches' in window)) return null;
-      const c = await caches.open(CACHE_JEU);
-      const bons = new Set(MORCEAUX_PCK);
-      let otes = 0;
-      for (const req of await c.keys()) {
-        const bouts = new URL(req.url).pathname.split('/');
-        if (!bons.has(decodeURIComponent(bouts[bouts.length - 2] || ''))) { await c.delete(req); otes++; }
-      }
-      if (otes && window.vqNoter) vqNoter('mémoire du jeu : ' + otes + ' tranches d\'une ancienne version effacées');
-      return c;
-    } catch (e) { return null; }
-  })();
-  async function rangerTranche(c, cle, bouts) {
-    try { await c.put(cle, new Response(new Blob(bouts), { headers: { 'Content-Type': 'application/octet-stream' } })); return true; }
-    catch (e) { if (window.vqNoter) vqNoter('mémoire du jeu : rangement refusé (' + (e && e.name) + ')'); return false; }
-  }
-  // Donne les octets d'un morceau, tranche par tranche : depuis la mémoire du téléphone s'il y est en entier, sinon
-  // depuis le réseau (en le rangeant au passage).
-  async function* octetsMorceau(nom) {
-    const c = await cacheJeu;
-    let deja = 0;
-    if (c) {
-      try {
-        const fin = await c.match(cleJeu(nom, 'fin'));
-        if (fin) {
-          const n = parseInt(await fin.text(), 10) || 0;
-          for (let i = 0; i < n; i++) {
-            const r = await c.match(cleJeu(nom, i));
-            if (!r) throw new Error('tranche ' + i + ' absente');
-            const b = new Uint8Array(await r.arrayBuffer());
-            deja += b.length;
-            yield b;
-          }
-          etatJeu.garde++;
-          return;
-        }
-      } catch (e) {
-        if (window.vqNoter) vqNoter('mémoire du jeu illisible (' + (e && e.message) + ') : réseau');
-        try { await c.delete(cleJeu(nom, 'fin')); } catch (x) {}
-      }
-    }
-    const r = await fetchOrigine(nom);
-    if (!r.ok) throw new Error('morceau ' + nom);
-    etatJeu.reseau++;
-    const lecteur = r.body.getReader();
-    // (si la mémoire a lâché en cours de morceau, on saute les octets déjà donnés au jeu et on ne range pas cette fois)
-    let saute = deja, ranger = !!c && deja === 0, bouts = [], taille = 0, i = 0;
-    for (;;) {
-      const { done, value } = await lecteur.read();
-      if (done) break;
-      let v = value;
-      if (saute > 0) {
-        if (v.length <= saute) { saute -= v.length; continue; }
-        v = v.subarray(saute); saute = 0;
-      }
-      if (ranger) {
-        bouts.push(v); taille += v.length;
-        if (taille >= TRANCHE) { ranger = await rangerTranche(c, cleJeu(nom, i++), bouts); bouts = []; taille = 0; }
-      }
-      yield v;
-    }
-    if (ranger && taille > 0) ranger = await rangerTranche(c, cleJeu(nom, i++), bouts);
-    if (ranger) { try { await c.put(cleJeu(nom, 'fin'), new Response(String(i))); } catch (e) {} }
-  }
   window.fetch = async function (entree, options) {
     const url = typeof entree === 'string' ? entree : (entree && entree.url) || '';
     if (url.split('/').pop().split('?')[0] !== 'index.pck') return fetchOrigine(entree, options);
@@ -299,13 +224,12 @@ body {
         try {
           for (;;) {
             if (!lecteur) {
-              if (n >= MORCEAUX_PCK.length) {
-                if (window.vqNoter) vqNoter('pck reçu ' + Math.round(recu / 1e6) + ' Mo (' + etatJeu.garde + ' morceaux relus du téléphone, ' + etatJeu.reseau + ' téléchargés)');
-                ctrl.close(); return;
-              }
-              lecteur = octetsMorceau(MORCEAUX_PCK[n++]);
+              if (n >= MORCEAUX_PCK.length) { if (window.vqNoter) vqNoter('pck reçu ' + Math.round(recu / 1e6) + ' Mo'); ctrl.close(); return; }
+              const r = await fetchOrigine(MORCEAUX_PCK[n++]);
+              if (!r.ok) throw new Error('morceau ' + MORCEAUX_PCK[n - 1]);
+              lecteur = r.body.getReader();
             }
-            const { done, value } = await lecteur.next();
+            const { done, value } = await lecteur.read();
             if (done) { lecteur = null; continue; }
             recu += value.length;
             if (barre && TAILLE_PCK) { barre.max = 1; barre.value = Math.min(1, recu / TAILLE_PCK); }
